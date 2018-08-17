@@ -103,11 +103,6 @@ takeS n l = if longS l < n
                      NilS -> NilS
                      (Snoc l x) -> addFirstS (headS l) (takeS (n-1) (tailS (Snoc l x)))
 
-l = (Snoc (Snoc (Snoc (Snoc (Snoc NilS 1) 2) 3) 4) 5)
-u = ( Snoc ( Snoc ( Snoc NilS 1 ) 2 )3 )
-d = ( Snoc ( Snoc ( Snoc NilS 6 ) 7 ) 8 )
-
-
 data Nat = Zero | D (Nat) | O (Nat) deriving Show
 
 -- | Zero representa en número cero (0).
@@ -126,16 +121,16 @@ toNat n = if n `mod` 2 == 0
 succN :: Nat -> Nat
 succN n = case n of
   Zero -> O Zero
-  (D x) -> (O x)
   (O x) -> D(succN x)
+  (D x) -> (O x)
 
 -- | pred. Función que obtiene el predecesor de un número Nat.
 predN :: Nat -> Nat
 predN n = case n of
   Zero -> Zero
   O Zero -> Zero
-  (D x) -> O(predN x)
   (O x) -> D x
+  (D x) -> O(predN x)
 
 -- | add. Función que obtiene la suma de dos números Nat.
 addN :: Nat -> Nat -> Nat
@@ -148,7 +143,13 @@ addN n m = case n of
 -- | prod. Función que obtiene el producto de dos números Nat.
 prod :: Nat -> Nat -> Nat
 prod Zero _ = Zero
-prod n m = addN (prod (predN n) m) m
+prod _ Zero = Zero
+prod n m =
+  let
+    n1 = mataD n
+    m1 = mataD m
+  in
+    addN m1 (prod (predN n1) m1)
 
 --------------------------------------------------------------------------------
 --------                        Funciones auxiliares                    --------
@@ -165,6 +166,116 @@ longS :: ListS a -> Int
 longS NilS = 0
 longS (Snoc l x) = 1 + longS l
 
+mataD :: Nat -> Nat
+mataD d = case d of
+  Zero -> Zero
+  D Zero -> Zero
+  O Zero -> O Zero
+  (D x) -> D(mataD x)
+  (O x) -> O(mataD x)
+
+--------------------------------------------------------------------------------
+--------                            Ejemplos                            --------
+--------------------------------------------------------------------------------
+
+l = (Snoc (Snoc (Snoc (Snoc (Snoc NilS 1) 2) 3) 4) 5)
+u = ( Snoc ( Snoc ( Snoc NilS 1 ) 2 )3 )
+d = ( Snoc ( Snoc ( Snoc NilS 6 ) 7 ) 8 )
+
+
 --------------------------------------------------------------------------------
 --------                             Pruebas                            --------
 --------------------------------------------------------------------------------
+
+headS1 = headS NilS
+--Resultado: ***Exception: Empty list
+
+headS2 = headS l
+--Resultado: 1
+
+tailS1 = tailS NilS
+--Resultado: ***Exception: Empty list
+
+tailS2 = tailS (Snoc NilS 1)
+--Resultado: NilS
+
+tailS3 = tailS l
+--Resultado: Snoc(Snoc(Snoc(Snoc NilS 2)3)4)5
+
+initS1 = initS NilS
+--Resultado: ***Exception: Empty list
+
+initS2 = initS (Snoc NilS 1)
+--Resultado: NilS
+
+initS3 = initS l
+--Resultado: Snoc(Snoc(Snoc(Snoc NilS 1)2)3)4
+
+lastS1 = lastS NilS
+--Resultado: ***Exception Empty list
+
+lastS2 = lastS l
+--Resultado: 5
+
+nthElementS1 = nthElementS 5 NilS
+--Resultado: ***Exception Invalid index
+
+nthElementS2 = nthElementS 10 l
+--Resultado: ***Exception Invalid index
+
+nthElementS3 = nthElementS (-1) l
+--Resultado: ***Exception Invalid index
+
+nthElementS4 = nthElementS 0 l
+--Resultado: 1
+
+nthElementS5 = nthElementS 2 l
+--Resultado: 3
+
+deleteNthElementS1 = deleteNthElementS 5 NilS
+--Resultado: NilS
+
+deleteNthElementS2 = deleteNthElementS 10 l
+--Resultado: NilS
+
+deleteNthElementS3 = deleteNthElementS (-1) l
+--Resultado: ***Exception: Invalid index
+
+deleteNthElementS4 = deleteNthElementS 2 l
+--Resultado: Snoc(Snoc(Snoc(Snoc NilS 1)2)4)5
+
+addFirstS1 = addFirstS 0 l
+--Resultado: Snoc(Snoc(Snoc(Snoc(Snoc(Snoc NilS 0)1)2)3)4)5
+
+addLastS1 = addLastS 6 l
+--Resultado: Snoc(Snoc(Snoc(Snoc(Snoc(Snoc NilS 1)2)3)4)5)6
+
+reverseS1 = reverseS l
+--Resultado: Snoc(Snoc(Snoc(Snoc(Snoc NilS 5)4)3)2)1
+
+appendS1 = appendS u d
+--Resultado: Snoc(Snoc(Snoc(Snoc(Snoc(Snoc NilS 1)2)3)6)7)8
+
+takeS1 = takeS 0 l
+--Resultado: NilS
+
+takeS2 = takeS 10 l
+--Resultado: Snoc(Snoc(Snoc(Snoc(Snoc NilS 1)2)3)4)5
+
+takeS3 = takeS 2 l
+--Resultado: Snoc(Snoc NilS 1)2
+
+toNat1 = toNat 616
+--Resultado: D (D (D (O (D (O (O (D (D (O Zero)))))))))
+
+succN1 = succN (D(O(D Zero)))
+--Resultado: O (O Zero)
+
+predN1 = predN (D(O Zero))
+--Resultado: O Zero
+
+addN1 = addN (D(O(D Zero))) (D(O Zero))
+--Resultado: D (D (O Zero))
+
+prod1 = prod (D(O(D Zero))) (D(O Zero))
+--Resultado: D (D (O Zero))
