@@ -49,22 +49,22 @@ lastS l = case l of
 
 -- | nthElementS. Función que regresa el n-ésimo elemento de la lista.
 nthElementS :: Int -> ListS a -> a
-nthElementS n l = case l of
-  NilS -> error "Invalid index"
-  (Snoc l x) -> case n of
-    0 -> headS(Snoc l x)
-    n -> nthElementS (n-1) (tailS (Snoc l x))
+nthElementS n l = case n of
+  0 -> headS l
+  n -> if n < 0
+       then error "Invalid index"
+       else case l of
+              NilS -> error "Invalid index"
+              l -> nthElementS (n-1) (tailS l)
 
 -- | deleteNthElementS. Función que elimina el n-ésimo elemento de la lista.
 deleteNthElementS :: Int -> ListS a -> ListS a
-deleteNthElementS = error "Implementar"
-{-
-deleteNthElementS 0 (Snoc xs a) = tailS (Snoc xs a)
-deleteNthElementS n NilS = NilS
---deleteNthElementS n (Snoc xs a) = deleteNthElementS (n-1) (tailS (Snoc xs a))
---deleteNthElementS n (Snoc xs a) = Snoc (deleteNthElementS (n-1) (tailS (Snoc xs a))) (headS (Snoc xs a))
-deleteNthElementS n (Snoc l x) = 
--}
+deleteNthElementS n l = if n > longS l
+                        then NilS
+                        else if n < 0
+                             then error "Invalid index"
+                             else deleteNthElementSAux n l
+
 -- | addFirstS. Función que obtiene la lista donde el primer elemento es el
 -- | elemento dado.
 addFirstS :: a -> ListS a -> ListS a
@@ -95,16 +95,13 @@ appendS l l2 = case l of
 
 -- | takeS. Función que obtiene la lista con los primeros n elementos.
 takeS :: Int -> ListS a -> ListS a
-takeS = error "Implemetar"
-{-
-takeS n l = case n of
-  0 -> NilS
-  n -> case l of
--}
---takeS 0 (Snoc xs x) = NilS
---takes n (Snoc xs x) =
---takeS n (Snoc xs x) = Snoc (takeS (n-1) (tailS (Snoc xs x))) (headS (Snoc xs x))
-
+takeS n l = if longS l < n
+            then l
+            else case n of
+                   0 -> NilS
+                   n -> case l of
+                     NilS -> NilS
+                     (Snoc l x) -> addFirstS (headS l) (takeS (n-1) (tailS (Snoc l x)))
 
 l = (Snoc (Snoc (Snoc (Snoc (Snoc NilS 1) 2) 3) 4) 5)
 u = ( Snoc ( Snoc ( Snoc NilS 1 ) 2 )3 )
@@ -127,44 +124,47 @@ toNat n = if n `mod` 2 == 0
 
 -- | succ. Función que obtiene el sucesor de un número Nat.
 succN :: Nat -> Nat
-succN nat = case nat of
+succN n = case n of
   Zero -> O Zero
-  (O x) -> mataD(D (succN x))
-  (D x) -> mataD(O x)
-
-mataD :: Nat -> Nat
-mataD nat = case nat of
-  (D Zero) -> Zero
-  (O Zero) -> O Zero
-  (D x) -> D(mataD x)
-  (O x) -> O(mataD x)
+  (D x) -> (O x)
+  (O x) -> D(succN x)
 
 -- | pred. Función que obtiene el predecesor de un número Nat.
 predN :: Nat -> Nat
-predN nat = case nat of
-  Zero -> error "Invalid index"
-  (O x) -> mataD(D x)
-  (D x) -> mataD(O (predN x))
+predN n = case n of
+  Zero -> Zero
+  O Zero -> Zero
+  (D x) -> O(predN x)
+  (O x) -> D x
 
 -- | add. Función que obtiene la suma de dos números Nat.
-add :: Nat -> Nat -> Nat
-add n m = case n of
-  Zero -> case m of
-    Zero -> Zero
-    m -> m
+addN :: Nat -> Nat -> Nat
+addN n m = case n of
+  Zero -> m
   n -> case m of
     Zero -> n
-    m -> add (succN n) (predN m)
-
-{-
-add Zero Zero = Zero
-add n Zero = n
-add Zero m = m
-add n m = add (succN n) (predN m)
--}
+    m -> addN (succN n) (predN m)
 
 -- | prod. Función que obtiene el producto de dos números Nat.
 prod :: Nat -> Nat -> Nat
-prod 
---prod = error "Implementar"
+prod Zero _ = Zero
+prod n m = addN (prod (predN n) m) m
 
+--------------------------------------------------------------------------------
+--------                        Funciones auxiliares                    --------
+--------------------------------------------------------------------------------
+
+deleteNthElementSAux :: Int -> ListS a -> ListS a
+deleteNthElementSAux n l = case n of
+  0 -> tailS l
+  n -> case l of
+    NilS -> NilS
+    (Snoc l x) -> addFirstS (headS l) (deleteNthElementSAux (n-1) (tailS (Snoc l x)))
+
+longS :: ListS a -> Int
+longS NilS = 0
+longS (Snoc l x) = 1 + longS l
+
+--------------------------------------------------------------------------------
+--------                             Pruebas                            --------
+--------------------------------------------------------------------------------
