@@ -7,7 +7,7 @@
 - Emiliano Galeana Araujo 314032324 galeanaara@ciencias.unam.mx
 -}
 
-module Pract1 where
+module EjerSem01 where
 
 data ListS a = NilS | Snoc (ListS a) a deriving Show
 
