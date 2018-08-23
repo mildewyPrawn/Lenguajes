@@ -53,7 +53,12 @@ stackOperation s com = case com of
                          SEL   -> if (validaStack s com)
                                   then selaux s
                                   else error "Error en Stack, faltan elementos"
-                         
+                         NGET  -> if (validaStack s com)
+                                  then ngetaux s (comToNat (cab s))  -- esto no sé que tan bien esté
+                                  else error "Error en Stack, faltan elementos"
+
+ngetaux :: Stack -> Int -> Stack
+ngetaux (x:xs) = error "Tenemos que hacer que cuente los n elementos, no entiendo nget "
 
 selaux :: Stack -> Stack
 selaux (x:y:z:zs) = if (comToNat z == 0)
@@ -62,7 +67,7 @@ selaux (x:y:z:zs) = if (comToNat z == 0)
 
 comToNat :: Command -> Int
 comToNat (I n) = n
-comToNat _ = error "Tipo de dato no aceptado en SEL"
+comToNat _ = error "Tipo de dato no aceptado."
 
 swapiaux :: Stack -> Stack
 swapiaux (x:y:ys) = (y:x:ys)
@@ -70,6 +75,9 @@ swapiaux (x:y:ys) = (y:x:ys)
 cola :: [a] -> [a]
 cola [] = []
 cola (_:xs) = xs
+
+cab :: [a] -> a
+cab (x:xs) = x
 
 validaStack :: Stack -> Command -> Bool
 validaStack s com = case com of
@@ -80,6 +88,9 @@ validaStack s com = case com of
                                then True
                                else False
                       SEL   -> if (long s) > 2
+                               then True
+                               else False
+                      NGET  -> if (long (cola s) > comToNat (cab s))
                                then True
                                else False
 
