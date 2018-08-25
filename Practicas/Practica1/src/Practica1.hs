@@ -72,13 +72,13 @@ stackOperation s com = case com of
 -- la pila resultante de realizar la llamada a la operacion con exec.
 execOperation :: [Command] -> Stack -> ( [ Command ] , Stack )
 execOperation [] xs = ([ y| y <- xs, (isNat y) == False],  [x | x <- xs, isNat x]) 
-execOperation (c:cs) p = case c of
+execOperation (c:cs) s = case c of
   (I x) -> execOperation cs ((I x):p)
-  ADD -> execOperation cs (p ++ [ADD])
-  MUL -> execOperation cs (p ++ [MUL])
-  DIV -> execOperation cs (p ++ [DIV])
-  SUB -> execOperation cs (p ++ [SUB])
-  REM -> execOperation cs (p ++ [REM])
+  ADD -> execOperation cs (s ++ [ADD])
+  MUL -> execOperation cs (s ++ [MUL])
+  DIV -> execOperation cs (s ++ [DIV])
+  SUB -> execOperation cs (s ++ [SUB])
+  REM -> execOperation cs (s ++ [REM])
   ES xs -> execOperation cs (xs)
  
 
@@ -92,52 +92,51 @@ validProgram (p,n,l) s = (valid p n l) && (n == length s)
 --una pila de valores obtiene la pila de valores resultante despu ́es ejecutar
 --todos los comandos.
 executeCommands :: [Command] -> Stack -> Stack
-executeCommands [] p = p
-executeCommands (c:cs) p = case c of
-  (I x) -> executeCommands cs ((I x):p)
-  ADD -> if (length p) >= 2 
-    then executeCommands cs ((arithOperation ((fst (splitAt 2 p))!!1) ((fst (splitAt 2 p))!!0) c):(snd (splitAt 2 p))) 
+executeCommands [] s = s
+executeCommands (c:cs) s = case c of
+  (I x) -> executeCommands cs ((I x):s)
+  ADD -> if (length s) >= 2 
+    then executeCommands cs ((arithOperation ((fst (splitAt 2 s))!!1) ((fst (splitAt 2 s))!!0) c):(snd (splitAt 2 s))) 
     else error "Not enough numbers to add"
-  MUL -> if (length p) >= 2 
-    then executeCommands cs ((arithOperation (fst (splitAt 2 p)!!1) (fst (splitAt 2 p)!!0) c):snd (splitAt 2 p)) 
+  MUL -> if (length s) >= 2 
+    then executeCommands cs ((arithOperation (fst (splitAt 2 s)!!1) (fst (splitAt 2 s)!!0) c):snd (splitAt 2 s)) 
     else error "Not enough numbers to multiply" 
-  DIV -> if (length p) >= 2 
-    then executeCommands cs ((arithOperation (fst (splitAt 2 p)!!1) (fst (splitAt 2 p)!!0) c):snd (splitAt 2 p)) 
+  DIV -> if (length s) >= 2 
+    then executeCommands cs ((arithOperation (fst (splitAt 2 s)!!1) (fst (splitAt 2 s)!!0) c):snd (splitAt 2 s)) 
     else error "Not enough numbers to divide"
-  SUB -> if (length p) >= 2 
-    then executeCommands cs ((arithOperation (fst (splitAt 2 p)!!1) (fst (splitAt 2 p)!!0) c):snd (splitAt 2 p)) 
+  SUB -> if (length s) >= 2 
+    then executeCommands cs ((arithOperation (fst (splitAt 2 s)!!1) (fst (splitAt 2 s)!!0) c):snd (splitAt 2 s)) 
     else error "Not enough numbers to subtract"
-  REM -> if (length p) >= 2 
-    then executeCommands cs ((arithOperation (fst (splitAt 2 p)!!1) (fst (splitAt 2 p)!!0) c):snd (splitAt 2 p)) 
+  REM -> if (length s) >= 2 
+    then executeCommands cs ((arithOperation (fst (splitAt 2 s)!!1) (fst (splitAt 2 s)!!0) c):snd (splitAt 2 s)) 
     else error "Not enough numbers to ..."
-  Gt -> if (length p) >= 2 
-    then executeCommands cs ((arithOperation (fst (splitAt 2 p)!!1) (fst (splitAt 2 p)!!0) c):snd (splitAt 2 p)) 
+  Gt -> if (length s) >= 2 
+    then executeCommands cs ((arithOperation (fst (splitAt 2 s)!!1) (fst (splitAt 2 s)!!0) c):snd (splitAt 2 s)) 
     else error "Not enough numbers to compare"
-  Lt -> if (length p) >= 2 
-    then executeCommands cs ((arithOperation (fst (splitAt 2 p)!!1) (fst (splitAt 2 p)!!0) c):snd (splitAt 2 p)) 
+  Lt -> if (length s) >= 2 
+    then executeCommands cs ((arithOperation (fst (splitAt 2 s)!!1) (fst (splitAt 2 s)!!0) c):snd (splitAt 2 s)) 
     else error "Not enough numbers to compare"
-  Eq -> if (length p) >= 2 
-    then executeCommands cs ((arithOperation (fst (splitAt 2 p)!!1) (fst (splitAt 2 p)!!0) c):snd (splitAt 2 p)) 
+  Eq -> if (length s) >= 2 
+    then executeCommands cs ((arithOperation (fst (splitAt 2 s)!!1) (fst (splitAt 2 s)!!0) c):snd (splitAt 2 s)) 
     else error "Not enough numbers to compare"
-  SWAP -> if (length p) >= 2 
-    then executeCommands cs ((stackOperation p c))
-    else error "Error de ejecucion SWAP: Insuficientes argumentos."
-  ES xs -> if (length p) >= 2 
-    then executeCommands cs ((stackOperation p c))
-    else error "Error de ejecucion ES: Insuficientes argumentos."
-  POP -> if (length p) >= 2 
-    then executeCommands cs ((stackOperation p c))
-    else error "Error de ejecucion POP: Insuficientes argumentos."
-  SEL -> if (length p) >= 2 
-    then executeCommands cs ((stackOperation p c))
-    else error "Error de ejecucion SEL: Insuficientes argumentos."
-  NGET -> if (length p) >= 2 
-    then executeCommands cs ((stackOperation p c))
-    else error "Error de ejecucion NGET: Insuficientes argumentos."
-  _ -> error "Terminar"
+  SWAP -> if (length s) >= 2 
+    then executeCommands cs ((stackOperation s c))
+    else error "Not enough arguments."
+  ES xs -> if (length s) >= 2 
+    then executeCommands cs ((stackOperation s c))
+    else error "Not enough arguments."
+  POP -> if (length s) >= 2 
+    then executeCommands cs ((stackOperation s c))
+    else error "Not enough arguments."
+  SEL -> if (length s) >= 2 
+    then executeCommands cs ((stackOperation s c))
+    else error "Not enough arguments."
+  NGET -> if (length s) >= 2 
+    then executeCommands cs ((stackOperation s c))
+    else error "Not enough arguments."
 
-
-
+executeProgram:: Program -> Stack -> [Command]
+executeProgram (pf,i,k) s = if validProgram (pf,i,k) s then executeCommands k s else []
 
 
 
@@ -192,5 +191,4 @@ validaStack s com = case com of
 
 
 
-executeProgram:: Program -> Stack -> [Command]
-executeProgram (pf,i,k) s = if validProgram (pf,i,k) s then executeCommands k s else []
+
