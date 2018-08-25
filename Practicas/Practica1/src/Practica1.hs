@@ -64,24 +64,77 @@ stackOperation s com = case com of
                                   then selaux s
                                   else error "Error en Stack, faltan elementos"
                          NGET  -> ngetaux s
+
+                                  
                          
 
 -- | execOperation. Funcion que devuelve la lista de comandos y
 -- la pila resultante de realizar la llamada a la operacion con exec.
-
+execOperation :: [Command] -> Stack -> ( [ Command ] , Stack )
+execOperation [] xs = ([ y| y <- xs, (isNat y) == False],  [x | x <- xs, isNat x]) 
+execOperation (c:cs) p = case c of
+  (I x) -> execOperation cs ((I x):p)
+  ADD -> execOperation cs (p ++ [ADD])
+  MUL -> execOperation cs (p ++ [MUL])
+  DIV -> execOperation cs (p ++ [DIV])
+  SUB -> execOperation cs (p ++ [SUB])
+  REM -> execOperation cs (p ++ [REM])
+  ES xs -> execOperation cs (xs)
+ 
 
 -- | validProgram. Funcion que determina si la pila de valores que
 --   se desea ejecutar con un programa es valida.
+validProgram :: Program -> Stack -> Bool
+validProgram (p,n,l) s = (valid p n l) && (n == length s)
 
 
-
--- | executeCommands. Funci ́on que dada una lista de comandos y
+-- | executeCommands. Funcion que dada una lista de comandos y
 --una pila de valores obtiene la pila de valores resultante despu ́es ejecutar
 --todos los comandos.
-
-
-
-
+executeCommands :: [Command] -> Stack -> Stack
+executeCommands [] p = p
+executeCommands (c:cs) p = case c of
+  (I x) -> executeCommands cs ((I x):p)
+  ADD -> if (length p) >= 2 
+    then executeCommands cs ((arithOperation ((fst (splitAt 2 p))!!1) ((fst (splitAt 2 p))!!0) c):(snd (splitAt 2 p))) 
+    else error "Not enough numbers to add"
+  MUL -> if (length p) >= 2 
+    then executeCommands cs ((arithOperation (fst (splitAt 2 p)!!1) (fst (splitAt 2 p)!!0) c):snd (splitAt 2 p)) 
+    else error "Not enough numbers to multiply" 
+  DIV -> if (length p) >= 2 
+    then executeCommands cs ((arithOperation (fst (splitAt 2 p)!!1) (fst (splitAt 2 p)!!0) c):snd (splitAt 2 p)) 
+    else error "Not enough numbers to divide"
+  SUB -> if (length p) >= 2 
+    then executeCommands cs ((arithOperation (fst (splitAt 2 p)!!1) (fst (splitAt 2 p)!!0) c):snd (splitAt 2 p)) 
+    else error "Not enough numbers to subtract"
+  REM -> if (length p) >= 2 
+    then executeCommands cs ((arithOperation (fst (splitAt 2 p)!!1) (fst (splitAt 2 p)!!0) c):snd (splitAt 2 p)) 
+    else error "Not enough numbers to ..."
+  Gt -> if (length p) >= 2 
+    then executeCommands cs ((arithOperation (fst (splitAt 2 p)!!1) (fst (splitAt 2 p)!!0) c):snd (splitAt 2 p)) 
+    else error "Not enough numbers to compare"
+  Lt -> if (length p) >= 2 
+    then executeCommands cs ((arithOperation (fst (splitAt 2 p)!!1) (fst (splitAt 2 p)!!0) c):snd (splitAt 2 p)) 
+    else error "Not enough numbers to compare"
+  Eq -> if (length p) >= 2 
+    then executeCommands cs ((arithOperation (fst (splitAt 2 p)!!1) (fst (splitAt 2 p)!!0) c):snd (splitAt 2 p)) 
+    else error "Not enough numbers to compare"
+  SWAP -> if (length p) >= 2 
+    then executeCommands cs ((stackOperation p c))
+    else error "Error de ejecucion SWAP: Insuficientes argumentos."
+  ES xs -> if (length p) >= 2 
+    then executeCommands cs ((stackOperation p c))
+    else error "Error de ejecucion ES: Insuficientes argumentos."
+  POP -> if (length p) >= 2 
+    then executeCommands cs ((stackOperation p c))
+    else error "Error de ejecucion POP: Insuficientes argumentos."
+  SEL -> if (length p) >= 2 
+    then executeCommands cs ((stackOperation p c))
+    else error "Error de ejecucion SEL: Insuficientes argumentos."
+  NGET -> if (length p) >= 2 
+    then executeCommands cs ((stackOperation p c))
+    else error "Error de ejecucion NGET: Insuficientes argumentos."
+  _ -> error "Terminar"
 
 
 
@@ -107,8 +160,12 @@ isNat (I n) = True
 isNat k = False
 
 
+valid :: PF -> Int -> [Command] -> Bool
+valid pf i xs = if (pf == POSTFIX && (i >=0 && (length xs) >= 2 )) then True else False
+
 swapiaux :: Stack -> Stack
 swapiaux (x:y:ys) = (y:x:ys)
+
 
 cola :: [a] -> [a]
 cola [] = []
@@ -116,41 +173,24 @@ cola (_:xs) = xs
 
 ngetaux :: Stack -> Stack
 ngetaux [] = []
---ngetaux (x:xs) = if (isNat x) then xs else xs ++ xs
-ngetaux (x:xs) = if ( (isNat x) && (   (  1<=(comToNat x) && ( (comToNat x) <= len( ( xs )   ) &&  (isNat((x:xs) !! (comToNat x) ) ) ) )    )   )
+ngetaux (x:xs) = if ( (isNat x) && (   (  1<=(comToNat x) && ( (comToNat x) <= length( ( xs )   ) &&  (isNat((x:xs) !! (comToNat x) ) ) ) )    )   )
               then  [((x:xs) !! (comToNat x))] ++ xs 
               else xs
 
 
 validaStack :: Stack -> Command -> Bool
 validaStack s com = case com of
-                      POP   -> if (len s) > 0
+                      POP   -> if (length s ) > 0
                                then True
                                else False
-                      SWAP  -> if (len s) > 1
+                      SWAP  -> if (length s) > 1
                                then True
                                else False
-                      SEL   -> if (len s) > 2
+                      SEL   -> if (length s) > 2
                                then True
                                else False
 
-len :: Stack -> Int
-len [] = 0
-len (x:xs) = 1 + len xs
-
-execOperation :: [Command] -> Stack -> ([Command], Stack)
-execOperation = error " D: "
-{-
-execOperation 
--}
-
-validProgram :: Program -> Stack -> Bool
-validProgram = error " D: "
-
-executeCommands :: [Command] -> Stack -> Stack
-executeCommands = error " D: "
-
-executeProgram :: Program -> Stack -> Int
-executeProgram = error " D: "
 
 
+executeProgram:: Program -> Stack -> [Command]
+executeProgram (pf,i,k) s = if validProgram (pf,i,k) s then executeCommands k s else []
