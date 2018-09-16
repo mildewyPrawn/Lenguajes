@@ -14,11 +14,11 @@ module Practica1 where
 
 import Data.Typeable
 
--- Comandos 
+-- Comandos
 data Command = I Int | ADD | DIV | Eq | EXEC | Gt | Lt | MUL | NGET | POP | REM |
                SEL | SUB | SWAP | ES [Command] deriving Show 
 
--- Constructor de la alabra reservada 
+-- Constructor de la alabra reservada
 data PF = POSTFIX deriving (Show, Eq)
 
 --representacion de los programas
