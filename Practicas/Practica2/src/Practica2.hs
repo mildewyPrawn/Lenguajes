@@ -1,6 +1,6 @@
 {-
 - Lenguajes de Programación 2019-1
-- Implementación de Postfix
+- El lenguaje EAB (Semantica)
 - Profesor: Dr. Favio Ezequiel Miranda Perea
 - Ayudante: Diego Carrillo Verduzco
 - Laboratorio: Pablo G. González López
@@ -155,7 +155,82 @@ evals (Let x a c) = if(block a)
 -- |       syss e ->* e' y e' es un valor. En caso de que e' no sea un valor
 -- |       deberá mostrar un mensaje de error particular del operador que lo
 -- |       causó.
-
+eval :: Exp -> Exp
+eval (V x) = V x
+eval (I n) = I n
+eval (B b) = B b
+eval (Add a b) = let
+  x = evals(Add a b)
+  in
+    if(isNat(x))
+    then x
+    else error "[Add] Expects two Nat."
+eval (Mul a b) = let
+  x = evals(Mul a b)
+  in
+    if(isNat x)
+    then x
+    else error "[Mul] Expects two Nat."
+eval (Succ a) = let
+  x = evals(Succ a)
+  in
+    if(isNat x)
+    then x
+    else error "[Succ] Expects one Nat."
+eval (Pred a) = let
+  x = evals(Pred a)
+  in
+    if(isNat x)
+    then x
+    else error "[Pred] Expects one Nat."
+eval (Not x) = let
+  x = evals(Not x)
+  in
+    if(esBool x)
+    then x
+    else error "[Not] Expects one Bool."
+eval (And a b) = let
+  x = evals(And a b)
+  in
+    if(esBool x)
+    then x
+    else error "[And] Expects two Bool."
+eval (Or a b) = let
+  x = evals(Or a b)
+  in
+    if(esBool x)
+    then x
+    else error "[Or] Expects two Bool."
+eval (Lt a b) = let
+  x = evals(Lt a b)
+  in
+    if(esBool x)
+    then x
+    else error "[Lt] Expects two Nat."
+eval (Gt a b) = let
+  x = evals(Gt a b)
+  in
+    if(esBool x)
+    then x
+    else error "[Gt] Expects two Nat."
+eval (Eq a b) = let
+  x = evals(Eq a b)
+  in
+    if(esBool x)
+    then x
+    else error "[Eq] Expects two Nat."
+eval (If b a c) = let
+  x = evals(If b a c)
+  in
+    if x == a || x == b
+    then x
+    else error "[If] Expects one Bool and two Exp."
+eval (Let y a b) = let
+  x = evals(Let y a b)
+  in
+    if(isNat x || esBool x)
+    then x
+    else error "[Let] Expects one Var and two Exp."
 
 block :: Exp -> Bool
 block (V _) = True
