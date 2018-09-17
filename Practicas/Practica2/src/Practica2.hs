@@ -145,10 +145,10 @@ evals (If (B False) e1 e2) = e2
 evals (If b e1 e2) = if(block b)
                      then (If b e1 e2)
                      else evals(If (evals b) e1 e2)
-evals (Let x (I n) c) = subst c (x, (I n))
-evals (Let x (B b) c) = subst c (x, (B b))
+evals (Let x (I n) c) = evals(subst c (x, (I n)))
+evals (Let x (B b) c) = evals(subst c (x, (B b)))
 evals (Let x a c) = if(block a)
-                    then subst c (x, a)
+                    then evals(subst c (x, a))
                     else evals(Let x (evals a) c)
 
 -- | eval. Funcion que devuelve la evaluación de un programa tal que eval e = e'
@@ -188,19 +188,19 @@ eval (Not x) = let
   in
     if(esBool x)
     then x
-    else error "[Not] Expects one Bool."
+    else error "[Not] Expects one Boolean."
 eval (And a b) = let
   x = evals(And a b)
   in
     if(esBool x)
     then x
-    else error "[And] Expects two Bool."
+    else error "[And] Expects two Boolean."
 eval (Or a b) = let
   x = evals(Or a b)
   in
     if(esBool x)
     then x
-    else error "[Or] Expects two Bool."
+    else error "[Or] Expects two Boolean."
 eval (Lt a b) = let
   x = evals(Lt a b)
   in
@@ -224,7 +224,7 @@ eval (If b a c) = let
   in
     if x == a || x == b
     then x
-    else error "[If] Expects one Bool and two Exp."
+    else error "[If] Expects one Boolean and two Exp."
 eval (Let y a b) = let
   x = evals(Let y a b)
   in
@@ -232,6 +232,22 @@ eval (Let y a b) = let
     then x
     else error "[Let] Expects one Var and two Exp."
 
+
+
+data Type = Nat | Boolean
+
+type Decl = (Identifier, Type)
+type TypCtxt = [Decl]
+
+-- | vt. Funcion que verifica el tipado de un programa tal que vt Γ e T = True
+-- |     syss Γ ⊢ e:T.
+vt :: Decl -> Exp -> Bool
+vt = error "implementar"
+
+--------------------------------------------------------------------------------
+--------                       Funciones Auxiliares                     --------
+--------------------------------------------------------------------------------
+-- | block. Función que nos dice si una expresion está bloqueda o no.
 block :: Exp -> Bool
 block (V _) = True
 block (I _) = True
@@ -286,20 +302,51 @@ block (Let _ a _) = if(isNat(evals a) || esBool(evals a)) --Mmmm no lo sé Rick
                     then False
                     else True
 
-
+-- | tomaBool. Función que devuelve la parte booleana de una EAB.
 tomaBool :: Exp -> Bool
 tomaBool (B b) = b
 tomaBool _ = error "No es un booleano"
 
+-- | esBool. Función que nos dice si una EAB es un booleano.
 esBool :: Exp -> Bool
 esBool (B _) = True
 esBool _ = False
 
+-- | isNat. Función que nos dice si una EAB es un natural.
 isNat :: Exp -> Bool
 isNat (I _) = True
 isNat _ = False
 
+-- | tomaNat. Función que devuelve la parte natural de una EAB.
 tomaNat :: Exp -> Int
 tomaNat (I n) = n
 tomaNat _ = error "no es un número"
 
+--------------------------------------------------------------------------------
+--------                             Pruebas                            --------
+--------------------------------------------------------------------------------
+
+eval1A = eval1 (Add (I 1) (I 2))
+--Resultado: N[3]
+
+eval1B = eval1 (Let "x" (I 1) (Add (V "x") (I 2)))
+--Resultado: Add(N[1], N[2])
+
+evals1 = evals (Let "x" (Add (I 1) (I 2)) (Eq (V "x") (I 0)))
+--Resultado: B[False]
+
+evals2 = evals (Add (Mul (I 2) (I 6)) (B True))
+--Resultado: Add(N[12], B[True])
+
+evalA = eval (Add (Mul (I 2) (I 6)) (B True))
+--Resultado: ***Exception: [Add] Expects two Nat.
+
+evalB = eval (Or (Eq (Add (I 0) (I 0)) (I 0)) (Eq (I 1) (I 10)))
+--Resultado: B[True]
+
+--vt1 = [("x", Boolean)] (If (B True) (B False) (V "x"))
+--Resultado: B[True]
+
+--vt2 = [] (Let "x" (Add (I 1) (I 2))
+  --        (Eq (Mul (Add (V "x") (I 5)) (I 0)) (Add (V "x") (I 2))))
+--Resultado: B[True]
