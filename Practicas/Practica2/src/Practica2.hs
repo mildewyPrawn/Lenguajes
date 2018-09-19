@@ -17,9 +17,10 @@ import EjerSem02
 -- |        e -> e'.
 
 eval1 :: Exp -> Exp
-eval1 (V x) = V x
-eval1 (I n) = I n
-eval1 (B b) = B b
+--eval1 (V x) = V x --esta no sé si se pone 3:
+eval1 (I _) = error "Ya es una expresion bloqueada."
+eval1 (B _) = error "Ya es una expresion bloqueada."
+--No las ponemos porque son estados bloqueados, y tiene que morir si no jala.
 eval1 (Add a b) = if (isNat a && isNat b)
                   then I(tomaNat a + tomaNat b)
                   else if (isNat a)
@@ -28,14 +29,14 @@ eval1 (Add a b) = if (isNat a && isNat b)
 eval1 (Mul a b) = if (isNat a && isNat b)
                   then I(tomaNat a * tomaNat b)
                   else if (isNat a)
-                       then (Add a (eval1 b))
-                       else (Add (eval1 a) b)
+                       then (Mul a (eval1 b))
+                       else (Mul (eval1 a) b)
 eval1 (Succ a) = if(isNat a)
                  then I(tomaNat a + 1)
                  else Succ(eval1 a)
 eval1 (Pred a) = if(isNat a)
                  then I(tomaNat a - 1)
-                 else Succ(eval1 a)
+                 else Pred(eval1 a)
 eval1 (Not x) = if(esBool x)
                 then B (not (tomaBool x))
                 else (Not (eval1 x))
@@ -47,8 +48,8 @@ eval1 (And a b) = if(esBool a && esBool b)
 eval1 (Or a b) = if(esBool a && esBool b)
                  then B(tomaBool a || tomaBool b)
                  else if (esBool a)
-                      then And a (eval1 b)
-                      else And (eval1 a) b
+                      then Or a (eval1 b)
+                      else Or (eval1 a) b
 eval1 (Lt a b) = if(isNat a && isNat b)
                  then B(tomaNat b < tomaNat a)
                  else if(isNat a)
@@ -140,8 +141,8 @@ evals (Eq (I a) e2) = if(block e2)
 evals (Eq e1 e2) = if(block e1)
                    then (Eq e1 e2)
                    else evals(Eq (evals e1) e2)
-evals (If (B True) e1 e2) = e1
-evals (If (B False) e1 e2) = e2
+evals (If (B True) e1 _) = e1
+evals (If (B False) _ e2) = e2
 evals (If b e1 e2) = if(block b)
                      then (If b e1 e2)
                      else evals(If (evals b) e1 e2)
@@ -234,16 +235,46 @@ eval (Let y a b) = let
 
 
 
-data Type = Nat | Boolean
+data Type = Nat | Boolean deriving(Show, Eq)
 
 type Decl = (Identifier, Type)
 type TypCtxt = [Decl]
 
 -- | vt. Funcion que verifica el tipado de un programa tal que vt Γ e T = True
 -- |     syss Γ ⊢ e:T.
-vt :: Decl -> Exp -> Bool
-vt = error "implementar"
-
+vt :: TypCtxt -> Exp -> Type -> Bool
+--vt l (V x) t =
+vt l (I n) t = t == Nat
+vt l (B b) t = t == Boolean
+vt l (Add e1 e2) t = t == Nat &&
+                     vt l e1 t &&
+                     vt l e2 t
+vt l (Mul e1 e2) t = t == Nat &&
+                     vt l e1 t &&
+                     vt l e2 t
+vt l (Succ e) t = vt l e t &&
+                  t == Nat
+vt l (Pred e) t = vt l e t &&
+                  t == Nat
+vt l (Not e) t = t == Boolean &&
+                 vt l e t
+vt l (And e1 e2) t = t == Boolean &&
+                     vt l e1 t &&
+                     vt l e2 t
+vt l (Or e1 e2) t = t == Boolean &&
+                     vt l e1 t &&
+                     vt l e2 t
+vt l (Lt e1 e2) t = t == Boolean &&
+                    vt l e1 t &&
+                    vt l e2 t
+vt l (Gt e1 e2) t = t == Boolean &&
+                    vt l e1 t &&
+                    vt l e2 t
+vt l (Eq e1 e2) t = t == Boolean &&
+                    vt l e1 t &&
+                    vt l e2 t
+vt l (If b e1 e2) t = vt l e1 t == vt l e2 t &&
+                      vt l b Boolean
 --------------------------------------------------------------------------------
 --------                       Funciones Auxiliares                     --------
 --------------------------------------------------------------------------------
