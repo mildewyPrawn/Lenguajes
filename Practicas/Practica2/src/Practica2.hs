@@ -243,7 +243,12 @@ type TypCtxt = [Decl]
 -- | vt. Funcion que verifica el tipado de un programa tal que vt Γ e T = True
 -- |     syss Γ ⊢ e:T.
 vt :: TypCtxt -> Exp -> Type -> Bool
---vt l (V x) t =
+vt [] (V x) t = False
+vt ((a,b):xs) (V x) t = if x == a
+                        then if b == t
+                             then True
+                             else False
+                        else vt xs (V x) t
 vt l (I n) t = t == Nat
 vt l (B b) t = t == Boolean
 vt l (Add e1 e2) t = t == Nat &&
@@ -273,8 +278,10 @@ vt l (Gt e1 e2) t = t == Boolean &&
 vt l (Eq e1 e2) t = t == Boolean &&
                     vt l e1 t &&
                     vt l e2 t
-vt l (If b e1 e2) t = vt l e1 t == vt l e2 t &&
-                      vt l b Boolean
+vt l (If b e1 e2) t = vt l b Boolean &&
+                      vt l e1 t &&
+                      vt l e2 t
+vt l (Let e1 x e2) t = l++[(e1,t)]--vt l e2 t
 --------------------------------------------------------------------------------
 --------                       Funciones Auxiliares                     --------
 --------------------------------------------------------------------------------
