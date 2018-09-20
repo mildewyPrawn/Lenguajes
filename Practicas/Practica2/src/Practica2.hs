@@ -245,9 +245,7 @@ type TypCtxt = [Decl]
 vt :: TypCtxt -> Exp -> Type -> Bool
 vt [] (V x) t = False
 vt ((a,b):xs) (V x) t = if x == a
-                        then if b == t
-                             then True
-                             else False
+                        then b == t
                         else vt xs (V x) t
 vt l (I n) t = t == Nat
 vt l (B b) t = t == Boolean
@@ -270,18 +268,46 @@ vt l (Or e1 e2) t = t == Boolean &&
                      vt l e1 t &&
                      vt l e2 t
 vt l (Lt e1 e2) t = t == Boolean &&
-                    vt l e1 t &&
-                    vt l e2 t
+                    vt l e1 Nat &&
+                    vt l e2 Nat
 vt l (Gt e1 e2) t = t == Boolean &&
-                    vt l e1 t &&
-                    vt l e2 t
+                    vt l e1 Nat &&
+                    vt l e2 Nat
 vt l (Eq e1 e2) t = t == Boolean &&
-                    vt l e1 t &&
-                    vt l e2 t
+                    vt l e1 Nat &&
+                    vt l e2 Nat
 vt l (If b e1 e2) t = vt l b Boolean &&
                       vt l e1 t &&
                       vt l e2 t
-vt l (Let e1 x e2) t = l++[(e1,t)]--vt l e2 t
+vt l (Let id e1 e2) s =
+  let
+    x = evals e1
+  in
+    vt l e1 (getType x) &&
+    vt (l++[(id, getType e1)]) e2 s
+
+
+getType :: Exp -> Type
+getType (I _) = Nat
+getType (B _) = Boolean
+--getType _ = error "Tipo no valido."
+getType op = case op of
+  Add _ _ -> Nat
+  Mul _ _ -> Nat
+  Succ  _ -> Nat
+  Pred  _ -> Nat
+  Not   _ -> Boolean
+  And _ _ -> Boolean
+  Or  _ _ -> Boolean
+  Lt  _ _ -> Boolean
+  Gt  _ _ -> Boolean
+  Eq  _ _ -> Boolean
+  If _ a _-> getType a
+  Let _ _ b-> getType b
+  {-
+  t = l++[("x",s)]
+  in
+    vt t e2 s-}
 --------------------------------------------------------------------------------
 --------                       Funciones Auxiliares                     --------
 --------------------------------------------------------------------------------
