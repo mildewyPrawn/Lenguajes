@@ -404,9 +404,9 @@ evalA = eval (Add (Mul (I 2) (I 6)) (B True))
 evalB = eval (Or (Eq (Add (I 0) (I 0)) (I 0)) (Eq (I 1) (I 10)))
 --Resultado: B[True]
 
-vt1 = [("x", Boolean)] (If (B True) (B False) (V "x"))
---Resultado: B[True]
+vt1 = vt  [("x", Boolean)] (If (B True) (B False) (V "x")) Boolean
+--Resultado: True
 
-vt2 = [] (Let "x" (Add (I 1) (I 2))
-          (Eq (Mul (Add (V "x") (I 5)) (I 0)) (Add (V "x") (I 2))))
---Resultado: B[True]
+vt2 = vt [] (Let "x" (Add (I 1) (I 2))
+          (Eq (Mul (Add (V "x") (I 5)) (I 0)) (Add (V "x") (I 2)))) Boolean
+--Resultado: True
