@@ -290,7 +290,6 @@ vt l (Let id e1 e2) s =
 getType :: Exp -> Type
 getType (I _) = Nat
 getType (B _) = Boolean
---getType _ = error "Tipo no valido."
 getType op = case op of
   Add _ _ -> Nat
   Mul _ _ -> Nat
@@ -304,10 +303,7 @@ getType op = case op of
   Eq  _ _ -> Boolean
   If _ a _-> getType a
   Let _ _ b-> getType b
-  {-
-  t = l++[("x",s)]
-  in
-    vt t e2 s-}
+
 --------------------------------------------------------------------------------
 --------                       Funciones Auxiliares                     --------
 --------------------------------------------------------------------------------
@@ -408,9 +404,9 @@ evalA = eval (Add (Mul (I 2) (I 6)) (B True))
 evalB = eval (Or (Eq (Add (I 0) (I 0)) (I 0)) (Eq (I 1) (I 10)))
 --Resultado: B[True]
 
---vt1 = [("x", Boolean)] (If (B True) (B False) (V "x"))
+vt1 = [("x", Boolean)] (If (B True) (B False) (V "x"))
 --Resultado: B[True]
 
---vt2 = [] (Let "x" (Add (I 1) (I 2))
-  --        (Eq (Mul (Add (V "x") (I 5)) (I 0)) (Add (V "x") (I 2))))
+vt2 = [] (Let "x" (Add (I 1) (I 2))
+          (Eq (Mul (Add (V "x") (I 5)) (I 0)) (Add (V "x") (I 2))))
 --Resultado: B[True]

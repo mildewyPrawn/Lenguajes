@@ -1,0 +1,138 @@
+% Lenguajes de Programación 2019-1
+% Plantilla para reportes de laboratorio.
+
+\documentclass{article}
+
+\usepackage{authblk}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{proof}
+
+\title{Práctica 2}
+\author{Galeana Araujo, Emiliano, 314032324\\
+	Miranda Sánchez Kevin, 314011163}
+\affil{Facultad de Ciencias, UNAM}
+\date{Fecha de entrega:19 Septiembre 2018 }
+
+\begin{document}
+
+\maketitle
+\section{Semántica Dinámica.\\}
+
+\setlength{\inferLineSkip}{6pt}
+
+\[\infer{bool[true] \hspace{1em} valor}{}\ \hspace{1em} \infer{bool[false] \hspace{1em} valor}{}\] 
+\infer[(eandf)]{and(bool[n],bool[m]) \rightarrow and(n\&\&m)}{} \hspace{1em}
+\infer[(eandd)]{and(bool[n], t_{2}) \rightarrow and(bool[n], t_{2}')}{ t_{2} \rightarrow t_{2}'}\\
+\\\\\infer[(eandi)]{and(t_{1}, t_{2}) \rightarrow and(t_{1}' , t_{2}')}{ t_{1} \rightarrow t_{1}'}\\
+\\\\\infer[(eorf)]{or(bool[n],bool[m]) \rightarrow or(n||m)}{} \hspace{1em}
+\infer[(eord)]{or(bool[n], t_{2}) \rightarrow or(bool[n], t_{2}')}{ t_{2} \rightarrow t_{2}'}\\
+\\\\\infer[(eori)]{or(t_{1}, t_{2}) \rightarrow or(t_{1}' , t_{2})}{ t_{1} \rightarrow t_{1}'}\\
+\\\\\infer[(enotn)]{not(bool[n]) \rightarrow \textbf{not}(n)}{}\\\\\\\infer[(enotn)]{not(t) \rightarrow not(t')}{t \rightarrow t'}\\
+\infer[(elt0)]{lt(num[n],num[n]) \rightarrow bool[false]}{} \hspace{1em}
+\infer[(eltf)]{lt(num[n],num[m]) \rightarrow bool[n<m]}{}
+\\\\\infer[(elti)]{lt(t_{1}, t_{2}) \rightarrow lt( t_{1}',t_{2})}{ t_{1}  \rightarrow t_{1}'} \hspace{1em}\
+\infer[(eltd)]{lt(num[n],t_{2}) \rightarrow lt[num[n], t_{2}']}{t_{2} \rightarrow t_{2}'} \\
+\\\\\infer[(egtf0]{gt(num[n],num[n]) \rightarrow bool[false]}{} \hspace{1em}
+\infer[(egtf]{gt(num[n],num[m]) \rightarrow bool[n<m]}{} \\
+\\\\\infer[(egti)]{gt(t_{1}, t_{2}) \rightarrow gt( t_{1}',t_{2})}{ t_{1}  \rightarrow t_{1}'} \hspace{1em} \hspace{1em}
+\infer[(egtd)]{gt(num[n],t_{2}) \rightarrow gt[num[n], t_{2}']}{t_{2} \rightarrow t_{2}'} \\
+\\\\\infer[(eeq0)]{eq(num[n],num[n]) \rightarrow bool[true]}{} \hspace{1em}
+\infer[(eeqf)]{eq(num[n],num[m]) \rightarrow bool[n==m]}{} \\
+\\\\\infer[(eeqi)]{eq(t_{1}, t_{2}) \rightarrow eq( t_{1}',t_{2})}{ t_{1}  \rightarrow t_{1}'} \hspace{1em}
+\infer[(eeqd)]{eq(num[n],t_{2}) \rightarrow eq[num[n], t_{2}']}{t_{2} \rightarrow t_{2}'} \\
+
+\section{Semántica Estática}
+$$
+\infer[\textbf{(tand)}]            
+{\Gamma \vdash and(t_1,t_2): Bool }
+{
+	\Gamma \vdash t_1 : Bool \quad \Gamma \vdash t_2 : Bool
+}
+\quad
+\infer[\textbf{(tor)}]
+{\Gamma \vdash or(t_1,t_2): Bool }
+{
+	\Gamma \vdash t_1 : Bool \quad \Gamma \vdash t_2 : Bool
+}
+$$
+
+$$
+\infer[\textbf{(tneg)}]            
+{\Gamma \vdash neg(t): Bool }
+{
+	\Gamma \vdash t : Bool
+}
+\quad
+\infer[\textbf{(tlt)}]
+{\Gamma \vdash lt(t_1,t_2): Bool }
+{
+	\Gamma \vdash t_1 : Nat \quad \Gamma \vdash t_2 : Nat
+}
+$$
+
+$$
+\infer[\textbf{(tgt)}]            
+{\Gamma \vdash gt(t_1,t_2): Bool }
+{
+	\Gamma \vdash t_1 : Nat \quad \Gamma \vdash t_2 : Nat
+}
+\quad
+\infer[\textbf{(teq)}]
+{\Gamma \vdash eq(t_1,t_2): Bool }
+{
+	\Gamma \vdash t_1 : Nat  \quad \Gamma \vdash t_2 : Nat
+}
+$$
+\section{Descripción del programa}
+
+En esta practica podemos poner en practica el tema de semántica visto en clase.
+Se usara la semántica operacional para definir el comportamiento de los programas a través de un sistema de transiciones.
+
+Las definiciones a definir son las siguientes:
+
+\begin{itemize}
+	\item eval1. Función que devuelve la transición tal que eval1 e = e' syss e -$>$ e'.
+				eval1 :: Exp -$>$ Exp
+	 \item evals. Funcion que devuelve la transicion tal que evals e = e' syss e -$>$* e' y e' esta bloqueado.\\
+	 evals :: Exp -$>$ Exp
+	 \item eval. Funcion que devuelve la evaluación de un programa tal que eval e=e' syss e -$>$* e' y e' es un valor. En caso de que e' no sea un valor deberá mostrar un mensaje de error particular del operador que lo causó.\\
+	 eval :: Exp -$>$ Exp
+	 \item vt. Funcion que verifica el tipado de un programa tal que vt $\Gamma$ e T = True syss $\Gamma \vdash$ e:T
+	 vt :: TypCtxt -$>$ Exp -$>$ Type -$>$ Bool
+\end{itemize}
+
+\section{Entrada y ejecución}
+El programa es interpretado por GCHI de la siguiente forma
+ ~:ghci Practica2.\\
+\\\\Algunos ejemplos:\\
+ 
+\begin{lstlisting}[language=Haskell]
+Pratica2> eval1 (Add ( I 1 ) ( I 2 ) )
+I 3
+Practica2> evals ( Let "x" (Add ( I 1 ) ( I 2 ) ) (Eq (V "x" ) ( I 0 ) ) )
+B False
+Practica2> eval(Or (Eq (Add ( I 0 ) ( I 0 ) ) ( I 0 ) ) (Eq ( I 1 ) ( I 1 0 ) ) )
+B True
+Practica2> vt [ ( "x" , Boolean ) ] ( I f (B True) (B False ) ( Var "x" ) ) Boolean
+True
+\end{lstlisting}
+
+\section{Conclusiones}
+Esta ha sido la practica mas difícil hasta ahora y aún si fue emocionante hacerla. 
+Parece que logramos entender como funciona la semántica estática y la dinámica  
+
+%Bibliografia
+
+\begin{thebibliography}{9}
+
+\bibitem{lamport94}
+  Leslie Lamport,
+  \emph{\LaTeX: a document preparation system},
+  Addison Wesley, Massachusetts,
+  2nd edition,
+  1994.
+
+\end{thebibliography}
+
+\end{document}
