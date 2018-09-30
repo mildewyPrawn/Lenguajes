@@ -10,7 +10,7 @@
 
 module Practica3 where
 
-import Data.List (union, span, (\\))
+import Data.List 
 
 -- | Identifier. Tipo que define un nombre de variables como una cadena de texto.
 type Identifier = String
@@ -30,8 +30,6 @@ instance Show Expr where
 -- | Substitution. Tipo que representa la sustitucion.
 type Substitution = ( Identifier , Expr )
 
--- | Reducto. Tipo que representa un reducto del calculo lambda.
-type Reducto = (Identifier,Expr)
 
 frVars :: Expr -> [Identifier]
 frVars (Var x) = [x]
@@ -50,32 +48,34 @@ incrVar xs = if (elem (last xs) (['a'..'z']++['A'..'Z']))
              then xs ++ show 1
              else init xs ++ show((read[last xs])+1)
 
+alphaExpr :: Expr -> Expr
+alphaExpr (App e1 e2) = App (alphaExpr e1) (alphaExpr e2)
+alphaExpr (Lam x e) = Lam (incrVar x) (alphaExpr e)
+alphaExpr (Var x) = (Var (incrVar x))
+
+
+subst ::  Expr -> Substitution -> Expr
+subst e (i,s)  = sub e ((frVars s) `union` (lkVars e)) where
+  sub (Var v) _
+    | v == i = s
+    | otherwise = (Var v)
+  sub (Lam v e) vs
+    | v == i = (Lam v e)
+    | v `elem` (frVars s) = Lam ((incrVar v)) (sub e (((incrVar v)):vs) )
+    | otherwise = Lam v (sub e vs) where
+  sub (App e e1) vs = App (sub e vs) (sub e1 vs)
+
 
 
 {-
-allVars :: Expr -> [Identifier]
-allVars (Var x) = [x]
-allVars (App e1 e2) = allVars e1 `union` allVars e2
-allVars (Lam x e) = allVars e
-
-subst ::  Expr -> Substitution -> Expr
-subst e (x,s)  = sub e ((frVars s) `union` (allVars e)) where
-  sub (Var v) _
-    | v == x = s
-    | otherwise = (Var v)
-  sub (Lam v e') vs
-    | v == x = (Lam v e')
-    | v `elem` (frVars s) = Lam (v ++ (newId vs)) (sub e' ((v ++ (newId vs)):vs) )
-    | otherwise = Lam v (sub e' vs) where
-  sub (App f a) vs = App (sub f vs) (sub a vs)
-
-
-newId :: [Identifier] -> Identifier
-newId vs = head ([ (show i) | i <- [1..]] \\ vs)
-
-
-alphaExpr :: Expr -> Expr
-alphaExpr (Var x) = Var x
-alphaExpr (Lam x e) = if x `elem` ( e) then (Lam (incrVar x) (alphaExpr e)) else (Lam x e)
-alphaExpr (App e1 e2) = App (alphaExpr e1) (alphaExpr e2) 
+subst :: Expr -> Substitution -> Expr
+subst (Var v) (i,s)
+                | v == i = s
+                | otherwise = (Var v)
+subst (Lam x e) (i,s) 
+                | x == i = (Lam x e)
+                | x `elem` (frVars s) = Lam (incrVar x) e
+                | otherwise = Lam x (subst e (i,s))
+subst (App e e1) (i,s) = App (subst e (i,s)) (subst e1 (i,s))
 -}
+
