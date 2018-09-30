@@ -47,6 +47,7 @@ frVars :: Exp -> [Identifier]
 frVars (V x) = [x]
 frVars (I _) = []
 frVars (B _) = []
+-- cambiar los ++ por 'union'
 frVars (Add a b) = frVars a ++ frVars b
 frVars (Mul a b) = frVars a ++ frVars b
 frVars (Succ x) = frVars x
@@ -59,10 +60,12 @@ frVars (Gt a b) = frVars a ++ frVars b
 frVars (Eq a b) = frVars a ++ frVars b
 frVars (If b p q) = frVars b ++ frVars p ++ frVars q
 frVars (Let x p q) = (frVars p ++ frVars q) \\ [x]
+-- frVars (Let x p q) = (frVars q \\ [x]) 'union' frVars p
 
 -- | subst. Función que aplica la substitucion a la expresión dada en caso de ser
 --          posible.
 subst :: Exp -> Substitution -> Exp
+--subst (V x) (y, e) = if (x == y) then e else V x
 subst (V x) (y, e) = if (x == y) then e else err
 subst (I n) _ = (I n)
 subst (B b) _ = (B b)
@@ -77,6 +80,9 @@ subst (Lt a b) s = Lt(subst a s)(subst b s)
 subst (Gt a b) s = Gt(subst a s)(subst b s)
 subst (Eq a b) s = Eq(subst a s)(subst b s)
 subst (If b p q) s = If(subst b s)(subst p s)(subst q s)
+--subst (Let x e1 e2) (y,e) = if(elem x (y :: frVars e))
+                     --then error
+                     --else Let x (subst e1 (y,e)) (subst e2 (y,e))
 subst (Let z p q) (y, e) = if notElem z ([y] ++ frVars e)
                            then Let (z)(subst p (y, e))(subst q (y, e))
                            else err
@@ -85,7 +91,7 @@ err = error "Could not apply the substitucion"
 
 -- | alphaEq. Función que determina si dos expresiones son alfa-equivalentes.
 alphaEq :: Exp -> Exp -> Bool
-alphaEq (V x) (V y) = if x == y
+alphaEq (V x) (V y) = if x == y -- cambiar por x == y
                       then True
                       else False
 alphaEq (I x) (I y) = if x == y
@@ -94,11 +100,14 @@ alphaEq (I x) (I y) = if x == y
 alphaEq (B x) (B y) = if x == y
                       then True
                       else False
+-- alphaEq (Add a1 a2) (Add b1 b2) = (alphaEq a1 b1) && (alphaEq a2 b2)
 alphaEq (Let x a b) (Let y c d) =
   ((V x) == (subst(V y) (y , (V x))))  &&
   a == (subst c (y, (a))) &&
   b == (subst d (y, (b))) &&
   length(frVars(Let x a b)) == length(frVars(Let y c d))
+--alphaEq (Let a1 x a2) (Let b1 y b2) = alphaEq a1 b1 && alphaEq(subst a2 (x,a1)) (subst b2 (y, b1))
+--a1 == b1 && a2 == subst b (y, x)
 alphaEq _ _ = False
 
 --------------------------------------------------------------------------------
