@@ -74,7 +74,7 @@ subst (Var v) (i,s)
                 | otherwise = (Var v)
 subst (Lam x e) (i,s) 
                 | x == i = (Lam x e)
-                | x `elem` (frVars s) = Lam (incrVar x) e
+                | x `elem` (frVars s) = Lam (incrVar x) (subst e (i,s))
                 | otherwise = Lam x (subst e (i,s))
 subst (App e e1) (i,s) = App (subst e (i,s)) (subst e1 (i,s))
 -}
