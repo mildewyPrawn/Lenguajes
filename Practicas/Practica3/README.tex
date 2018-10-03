@@ -6,6 +6,22 @@
 \usepackage{authblk}
 \usepackage[utf8]{inputenc}
 \usepackage{listings}
+{\lstset{}%
+  \csname lst@SetFirstLabel\endcsname}
+{\csname lst@SaveFirstLabel\endcsname}
+\lstset{
+  basicstyle=\small\ttfamily,
+  flexiblecolumns=false,
+  basewidth={0.5em,0.45em},
+  literate={+}{{$+$}}1 {/}{{$/$}}1 {*}{{$*$}}1 {=}{{$=$}}1
+  {>}{{$>$}}1 {<}{{$<$}}1 {\\}{{$\lambda$}}1
+  {\\\\}{{\char`\\\char`\\}}1
+  {->}{{$\rightarrow$}}2 {>=}{{$\geq$}}2 {<-}{{$\leftarrow$}}2
+  {<=}{{$\leq$}}2 {=>}{{$\Rightarrow$}}2 
+  {\ .}{{$\circ$}}2 {\ .\ }{{$\circ$}}2
+  {>>}{{>>}}2 {>>=}{{>>=}}2
+  {|}{{$\mid$}}1               
+}
 
 \title{Práctica 3}
 \author{314032324	Galeana Araujo, Emiliano\\
@@ -18,72 +34,86 @@
 \maketitle
 
 \section{Descripción del programa}
-Expresiones del Calculo Lambda
+Expresiones del Calculo Lambda, el cálculo lambda consiste siplemente en tres
+términos y todas las combinaciones recursivas válidas de estos términos. Las
+definimos como sigue.
 \begin{lstlisting}[language=Haskell]
 -- | Identifier. Tipo que define un nombre de variables como 
-una cadena de texto.
+-- |             una cadena de texto.
 type Identifier = String
 
 -- | Expr. Tipo que representa una expresion lambda sin tipos.
 data Expr = Var Identifier
-| Lam Identifier Expr
-| App Expr Expr deriving(Eq)
+          | Lam Identifier Expr
+          | App Expr Expr deriving(Eq)
            
 -- | Substitution. Tipo que representa la sustitucion.
 type Substitution = ( Identifier , Expr )
 \end{lstlisting}
-Los cuales representan las expresiones del calculo lambda sin tipos y el reducto para la funcion de sustitucion.\\
-\\Se realizaron las siguiente funciones que representan la semántica operacional en en calculo lambda.
+Por ejemplo, la siguiente expresión $\lambda x. \lambda y. xy$, la
+representaremos en Haskell como sigue. $\setminus x \rightarrow \setminus y
+\rightarrow (x y)$. Todo esto representa las expresiones del calculo lambda sin
+tipos y el reducto para la funcion de sustitucion.\\
+\\Se realizaron las siguiente funciones que representan la semántica operacional
+en en calculo lambda sin tipos.
 
 \begin{lstlisting}[language=Haskell]
---frVars. Obtiene el conjunto de variables libres de una expresion.
+-- | frVars. Obtiene el conjunto de variables libres de una expresion.
 frVars :: Expr -> [Identifier]
 
-
-
---lkVars. Obtiene el conjunto de variables ligadas de una expresion.
+-- | lkVars. Obtiene el conjunto de variables ligadas de una expresion.
 lkVars :: Expr -> [Identifier]
 
---incrVar. Dado un identificador, si este no termina en numero
---le agrega el sufijo 1, en caso contrario toma el valor del numero y lo
---incrementa en 1.
+-- | incrVar. Dado un identificador, si este no termina en numero
+-- |          le agrega el sufijo 1, en caso contrario toma el valor del numero
+-- |          y lo incrementa en 1.
 incrVar :: Identifier -> Identifier
 
 
---alphaExpr. Toma una expresion lambda y devuelve una alpha-equivalente 
---utilizando la funcion incrVar hasta encontrar un nombre que no aparezca
--- en el cuerpo.
+-- | alphaExpr. Toma una expresion lambda y devuelve una alpha-equivalente 
+-- |            utilizando la funcion incrVar hasta encontrar un nombre que no
+-- |            aparezca en el cuerpo.
 alphaExpr :: Expr -> Expr
 
--- subst. Aplica la sustitucion a la expresion dada.
+-- | subst. Aplica la sustitucion a la expresion dada.
 subst :: Expr -> Substitution -> Expr
 
--- beta. Aplica un paso de la beta reduccion.
+-- | beta. Aplica un paso de la beta reduccion.
 beta :: Expr -> Expr
 
--- locked. Determina si una expresion esta bloqueada, es decir, no se pueden hacer mas beta reducciones.
+-- | locked. Determina si una expresion esta bloqueada, es decir, no se pueden
+-- |         hacer mas reducciones.
 locked :: Expr -> Bool
 
---eval. Evalua una expresion lambda aplicando beta reducciones hasta quedar bloqueada.
+-- | eval. Evalua una expresion lambda aplicando beta reducciones hasta quedar
+-- |       bloqueada.
 eval :: Expr -> Expr
-
-
 
 \end{lstlisting}
 
 \section{Entrada y ejecución}
 
-Para correr el programa, se debe estar ubicado en la carpeta src, abrir una terminal e invocar el comando ghci Practica3.\\
-En el programa puede probar algunos ejemplos de ejecucion, esciribiendo simplemente el nombre del ejemplo que se quiere ejecutar.\\
+El programa es interpretado por \texttt{GCHI} de la siguiente forma
+\begin{lstlisting}[]
+  ~:ghci Practica3.hs
+\end{lstlisting}
+
+En el programa puede probar algunos ejemplos de ejecucion, esciribiendo
+simplemente  el nombre del ejemplo que se quiere ejecutar.\\
+
+\subsection{Calculo lambda}
 En el programa se encuentran las lineas de codigo.
 
 \begin{lstlisting}[language=Haskell]
 ---FRVARS-----------
-ejemplo = frVars (App (Lam "x" (App ( Var "x" ) ( Var "y" ) ) ) (Lam "z" ( Var "z" ) ) )
-ejemplo2 = frVars (Lam "f" (App (App (Var "f")(Lam "x"(App(App(Var "f")(Var "x"))(Var "x" ))))(Lam "x"(App(App(Var "f")(Var "x" ))( Var "x")))))
+ejemplo = frVars (App (Lam "x" (App ( Var "x" ) ( Var "y" ) ) )(Lam "z" ( Var "z" ) ) )
+ejemplo2 = frVars (Lam "f" (App (App (Var "f")(Lam "x"(App(App(Var "f")(Var
+"x"))(Var "x" ))))(Lam "x"(App(App(Var "f")(Var "x" ))( Var "x")))))
 ---LKVARS---------
-ejemplo3 = lkVars (App (Lam "x" (App ( Var "x" ) ( Var "y" ))) (Lam "z" ( Var "z" )))
-ejemplo4 = lkVars (Lam "f"(App(App(Var "f" )(Lam "x"(App(App(Var "f")(Var "x" ))(Var "x" ))))(Lam "x" (App(App(Var "f" )(Var "x"))(Var "x" )))))
+ejemplo3 = lkVars (App (Lam "x" (App ( Var "x" ) ( Var "y" ))) (Lam "z" ( Var
+"z" )))
+ejemplo4 = lkVars (Lam "f"(App(App(Var "f" )(Lam "x"(App(App(Var "f")(Var "x" ))
+(Var "x" ))))(Lam "x" (App(App(Var "f" )(Var "x"))(Var "x" )))))
 ----INCRVAR----
 ejemplo5 = incrVar "elem"
 ejemplo6 = incrVar "x97"
@@ -93,29 +123,36 @@ ejemplo7 = alphaExpr (Lam "x" (Lam "y" (App (Var "x" ) (Var "y" ))))
 ejemplo8 = alphaExpr (Lam "x" (Lam "x1" (App ( Var "x" ) ( Var "x1"))))
 
 --------SUBST------
-ejemplo9 = subst (Lam "x" (App ( Var "x" ) ( Var "y" ) ) ) ( "y" , Lam "z" ( Var "z" ))
+ejemplo9 = subst (Lam "x" (App ( Var "x" ) ( Var "y" ) ) ) ( "y" , Lam "z" ( Var
+"z" ))
 ejemplo10 = subst (Lam "x" ( Var "y" )) ( "y" , Var "x" )
 
 -----BETA-----
-ejemplo11 = beta (App (Lam "x" (App ( Var "x" ) ( Var "y" ))) (Lam "z" ( Var "z" )))
-ejemplo20 = beta (App (Lam "n" (Lam "s" (Lam "z" (App ( Var "s" ) (App (App ( Var "n" ) ( Var "s" ) ) ( Var "z" ) ) ) ) ) ) (Lam "s" (Lam "z" ( Var "z" ) ) ) )
+ejemplo11 = beta (App (Lam "x" (App ( Var "x" ) ( Var "y" ))) (Lam "z" ( Var "z"
+)))
+ejemplo20 = beta (App (Lam "n" (Lam "s" (Lam "z" (App ( Var "s" ) (App (App (
+Var "n" ) ( Var "s" ) ) ( Var "z" ) ) ) ) ) ) (Lam "s" (Lam "z" ( Var "z" ) ) ) )
 -----------LOCKED--------
 ejemplo12 = locked (Lam "s" (Lam "z" ( Var "z" ) ) )
 ejemplo13 = locked (Lam "x" (App (Lam "x" ( Var "x" ))( Var "z" )))
 
-ejemplo14 = eval (App (Lam "n" (Lam "s" (Lam "z" (App ( Var "s" ) (App (App ( Var "n" ) ( Var "s" ) ) ( Var "z" ) ) ) ) ) ) (Lam "s" (Lam "z" ( Var "z" ) ) ) )
-ejemplo15 = eval (App (Lam "n"(Lam "s"(Lam "z" (App (Var "s")(App (App (Var "n")(Var "s"))(Var "z" ))))))(Lam "s" (Lam "z" (App ( Var "s" )(Var "z" )))))
+ejemplo14 = eval (App (Lam "n" (Lam "s" (Lam "z" (App ( Var "s" ) (App (App (
+Var "n" )  ( Var "s" ) ) ( Var "z" ) ) ) ) ) ) (Lam "s" (Lam "z" ( Var "z" ) ) ) )
+ejemplo15 = eval (App (Lam "n"(Lam "s"(Lam "z" (App (Var "s")(App (App (Var "n")
+(Var "s"))(Var "z" ))))))(Lam "s" (Lam "z" (App ( Var "s" )(Var "z" )))))
 
 cero = Lam "s" (Lam "z" (Var "z"))
 uno = Lam "s1" (Lam "z1" (App (Var "s1") (Var "z1")))
-suc = Lam "n" (Lam "s2" (Lam "z2" (App (Var "s2") (App (App (Var "n") (Var "s2")) (Var "z2")))))
+suc = Lam "n" (Lam "s2" (Lam "z2" (App (Var "s2") (App (App (Var "n") (Var
+"s2"))  (Var "z2")))))
+
 ejemplo16 = eval (App suc cero)
 ejemplo17 = eval (App suc uno)
 \end{lstlisting}
 Entonces, para ejecutar algun de los ejemplos, basta escribir el nombre de la siguiente manera:
 \begin{lstlisting}[language=Haskell]
 *Practica3> ejemplo15
-\s ->\ z -> (s (s z))
+\s ->\z -> (s (s z))
 *Practica3> ejemplo12
 True
 *Practica3> ejemplo3
@@ -123,20 +160,20 @@ True
 *Practica3> ejemplo9
 \x -> (x \z -> z)
 \end{lstlisting}
-
+Nota, el regreso no está como en nuestra implementación, ya que tiene el simbolo
+$\lambda$, pero se puede ver que ambas representaciones son equivalentes.
 \section{Conclusiones}
-
-Estuvo perra 
+La parte de \texttt{locked} fue la más complicada, ya que hicimos varias
+implementaciones y con los ejemplos del PDF estaban bien, pero cuendo metíamos
+otros ejemplos, no salía lo que esperábamos, y en algún momento pensamos en usar
+\texttt{locked} para hacer \texttt{eval}, al final no lo necesitamos y pudimos
+arreglar \texttt{locked} en su mayoría.
 %Bibliografia
 
 \begin{thebibliography}{9}
 
 \bibitem{lamport94}
-  Leslie Lamport,
-  \emph{\LaTeX: a document preparation system},
-  Addison Wesley, Massachusetts,
-  2nd edition,
-  1994.
+  Archivero, curso de Lenguajes de Programación 2019-1
 
 \end{thebibliography}
 
