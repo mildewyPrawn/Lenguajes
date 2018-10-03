@@ -10,7 +10,7 @@
 
 module Practica3 where
 
-import Data.List (union, span, (\\), intersect)
+import Data.List (union, span, (\\),intersect)
 
 -- | Identifier. Tipo que define un nombre de variables como una cadena de texto.
 type Identifier = String
@@ -25,6 +25,7 @@ instance Show Expr where
   show e = case e of
              (Var x) -> x
              (Lam x e) -> "\\" ++ x ++ " -> " ++ (show e)
+             --(Lam x e) -> "λ" ++ x ++ "." ++ (show e)
              (App x y) -> "(" ++ (show x) ++ " " ++ (show y) ++ ")"
 
 -- | Substitution. Tipo que representa la sustitucion.
@@ -66,20 +67,55 @@ alphaExpr (Lam x e) =
   let
     nw = findId x (Lam x e)
   in
-    otroSubs (Lam x e) (x,nw)
+    alphaAux (Lam x e) x nw
 alphaExpr (App e1 e2) = App (alphaExpr e1) (alphaExpr e2)
---alphaExpr (Lam x e) = if x `elem` (frVars e) then (Lam (incrVar x) (alphaExpr e)) else (Lam x e)
 
+-- | subst. Aplica la sustitución a la expresión dada.
+subst :: Expr -> Substitution -> Expr
+subst (Var v) (i,s)
+                | v == i = s
+                | otherwise = (Var v)
+subst (Lam x e) (i,s)
+                | x == i = (Lam x e)
+                | x `elem` (frVars s) = Lam (incrVar x) (subst e (i,s))
+                | otherwise = Lam x (subst e (i,s))
+subst (App e e1) (i,s) = App (subst e (i,s)) (subst e1 (i,s))
 
--- | Tipo auxiliar para sustitución de identificadores.
-type OtroSubs = (Identifier, Identifier)
+-- | beta. Aplica un paso de la beta reduccion.
+beta :: Expr -> Expr
+beta (App (Lam x t) y) = (subst (t) (x, y))
+--beta (App (Lam x t) e) = App (Lam x t) (beta e)
+beta (Lam x e) = Lam x (beta e)
+beta (App e1 e2) = App e1 (beta e2)
+--beta (App e1 e2) = App (beta e1) e2
+beta (Var x) = Var x
+--beta e = e
 
--- | otroSubs. Función que dada una expresión y un tipo 'OtroSubs' devuelve
+-- | locked. Determina si una expresion está bloqueada, es decir, no se pueden
+-- |         hacer más beta reducciones.
+locked :: Expr -> Bool
+{-locked (Var _) = True
+--locked (Lam x e) = locked e
+locked a@(Lam x e) = [x] `intersect` (frVars a `union` lkVars a) /= []
+                     && locked e
+locked (App e1 e2) = (lkVars e1) `intersect` (frVars e2 `union` lkVars e2) /= []
+                     && locked e1 && locked e2-}
+locked exp = beta(exp) == exp
+
+-- | eval. Evalúa una expresión lambda aplicando beta reducciones hasta quedar
+-- |       bloqueada.
+eval :: Expr -> Expr
+eval x = if x == (evalaux x) then x else beta (evalaux x)
+---------------------------------------------------------------------------------------
+----                                 FUNCIONES AUXILIARES                           ---
+---------------------------------------------------------------------------------------
+
+-- | alphaAux. Función que dada una expresión y un tipo 'OtroSubs' devuelve
 -- |           la expresión equivalente a el segundo elemento de 'OtroSubs'.
-otroSubs :: Expr -> OtroSubs -> Expr
-otroSubs (Var x) (x1, x2) = if(x == x1) then (Var x2) else (Var x)
-otroSubs (Lam x e) (x1,x2) = if(x == x1) then Lam x2 (otroSubs e (x1,x2)) else Lam x (otroSubs e (x1,x2))
-otroSubs (App e1 e2) (x1, x2) = App (otroSubs e1 (x1,x2)) (otroSubs e2 (x1,x2))
+alphaAux :: Expr -> Identifier -> Identifier -> Expr
+alphaAux (Var x) x1 x2 = if (x == x1) then Var x2 else Var x
+alphaAux (Lam x e) x1 x2 = if x == x1 then Lam x2 (alphaAux e x1 x2) else Lam x (alphaAux e x1 x2)
+alphaAux (App e1 e2) x1 x2 = App (alphaAux e1 x1 x2) (alphaAux e2 x1 x2)
 
 -- | findId. Función que devuelve un 'Identifier' que no se encuentre en las
 -- |         variables de la expresión dada.
@@ -89,102 +125,72 @@ findId x e =
     x1 = incrVar x
   in
     if x1 `elem` lkVars (Lam x e) || x1 `elem` frVars (Lam x e)
+    --if elem x1 (lkVars (Lam x e))
     then findId x1 (Lam x e)
     else x1
 
--- | subst. Aplica la sustitución a la expresión dada.
-subst :: Expr -> Substitution -> Expr
-subst e (x,s)  = sub e ((frVars s) `union` (allVars e)) where
-  sub (Var v) _
-    | v == x = s
-    | otherwise = (Var v)
-  sub (Lam v e') vs
-    | v == x = (Lam v e')
-    | v `elem` (frVars s) = Lam (v ++ (newId vs)) (sub e' ((v ++ (newId vs)):vs) )
-    | otherwise = Lam v (sub e' vs) where
-  sub (App f a) vs = App (sub f vs) (sub a vs)
+-- | evalaux. Función recursiva auxiliar que evalúa una función del cálculo lambda.
+evalaux :: Expr -> Expr
+evalaux (App (Lam v e) d) = eval (subst e (v, d))
+evalaux (App e f) = App (eval e) (eval f)
+evalaux (Lam x e) = Lam x (eval e)
+evalaux e = e
 
+---------------------------------------------------------------------------------------
+----                                    PRUEBAS                                     ---
+---------------------------------------------------------------------------------------
 
--- | beta. Aplica un paso de la beta reduccion.
-beta :: Expr -> Expr
-beta (App (Lam x t) y) = (subst (t) (x, y))
-beta (App (Lam x t) e) = App (Lam x t) (beta e)
-beta (App e1 e2) = App (beta e1) e2
-beta (Lam x t) = Lam x (beta t)
-beta (Var x) = Var x
-{-
-beta (Var x) = Var x
-beta (Lam x e) = Lam x (beta e)
-beta (App (Lam x t) y) = (subst (t) (x, y))
-beta (App e1 e2) = App e1 (beta e2)
+---------FRVARS----------
+ejemplo = frVars (App (Lam "x" (App ( Var "x" ) ( Var "y" ) ) ) (Lam "z" ( Var "z" ) ) )
+--Respuesta: ["y"]
+ejemplo2 = frVars (Lam "f" (App (App (Var "f")(Lam "x"(App(App(Var "f")(Var "x"))(Var "x" ))))(Lam "x"(App(App(Var "f")(Var "x" ))( Var "x")))))
+--Respuesta: []
 
--}-- | locked. Determina si una expresion está bloqueada, es decir, no se pueden
--- |         hacer más beta reducciones.
-locked :: Expr -> Bool
-locked (Var _) = True
-locked (Lam x e) = not (x `elem` lkVars e) && locked e
---locked (Lam x e) = locked e
---locked (App e1 e2) = locked e1 && locked e2
-locked (App e1 e2) = (lkVars e1) `intersect` (lkVars e2) /=[]
+---------LKVARS----------
+ejemplo3 = lkVars (App (Lam "x" (App ( Var "x" ) ( Var "y" ))) (Lam "z" ( Var "z" )))
+--Respuesta: ["x","z"]
+ejemplo4 = lkVars (Lam "f"(App(App(Var "f" )(Lam "x"(App(App(Var "f")(Var "x" ))(Var "x" ))))(Lam "x" (App(App(Var "f" )(Var "x"))(Var "x" )))))
+--Respuesta: ["f","x"]
 
--- | eval. Evalúa una expresión lambda aplicando beta reducciones hasta quedar
--- |       bloqueada.
-eval :: Expr -> Expr
---eval (Var x) = (Var x)
-eval (Var x) = if(locked (Var x)) then Var x else eval(beta(Var x))
---eval (Lam x e) = eval(beta (Lam x e))
-eval (Lam x e) = if(locked (Lam x e)) then Lam x e else eval(beta(Lam x e))
---eval (App e1 e2) = eval (beta (App e1 e2))
-eval (App e1 e2) = if(locked (App e1 e2)) then App e1 e2 else eval(beta(App e1 e2))
-{-
-eval (Lam x e) =
-  let
-    y = beta(Lam x e)
-  in
-    if(locked y)
-    then y
-    else eval y
-eval (App e1 e2) =
-  let
-    y = beta(App e1 e2)
-  in
-    if(locked y)
-    then y
-    else eval y
--}
-allVars :: Expr -> [Identifier]
-allVars (Var x) = [x]
-allVars (App e1 e2) = allVars e1 `union` allVars e2
-allVars (Lam x e) = allVars e
+---------INCRVAR---------
+ejemplo5 = incrVar "elem"
+--Respuesta: elem1
+ejemplo6 = incrVar "x97"
+--Respuesta: x98
 
-newId :: [Identifier] -> Identifier
-newId vs = head ([ (show i) | i <- [1..]] \\ vs)
+-------ALPHAEXPR---------
+ejemplo7 = alphaExpr (Lam "x" (Lam "y" (App (Var "x" ) (Var "y" ))))
+--Respuesta: \x1 -> \y -> (x1 y)
+ejemplo8 = alphaExpr (Lam "x" (Lam "x1" (App ( Var "x" ) ( Var "x1"))))
+--Respuesta: \x2 -> \x1 -> (x2 x1)
 
+-----------SUBST---------
+ejemplo9 = subst (Lam "x" (App ( Var "x" ) ( Var "y" ) ) ) ( "y" , Lam "z" ( Var "z" ))
+--Respuesta: \x -> (x \z -> z)
+ejemplo10 = subst (Lam "x" ( Var "y" )) ( "y" , Var "x" )
+--Respuesta: \x1 -> x
 
-{-
-allVars :: Expr -> [Identifier]
-allVars (Var x) = [x]
-allVars (App e1 e2) = allVars e1 `union` allVars e2
-allVars (Lam x e) = allVars e
+-----BETA-----
+ejemplo11 = beta (App (Lam "x" (App ( Var "x" ) ( Var "y" ))) (Lam "z" ( Var "z" )))
+--Respuesta: (\z -> z y)
+ejemplo20 = beta (App (Lam "n" (Lam "s" (Lam "z" (App ( Var "s" ) (App (App ( Var "n" ) ( Var "s" ) ) ( Var "z" ) ) ) ) ) ) (Lam "s" (Lam "z" ( Var "z" ) ) ) )
+--Respuesta: \s -> \z -> (s ((\s -> \z -> z s) z))
 
-subst ::  Expr -> Substitution -> Expr
-sub st e (x,s)  = sub e ((frVars s) `union` (allVars e)) where
-  sub (Var v) _
-    | v == x = s
-    | otherwise = (Var v)
-  sub (Lam v e') vs
-    | v == x = (Lam v e')
-    | v `elem` (frVars s) = Lam (v ++ (newId vs)) (sub e' ((v ++ (newId vs)):vs) )
-    | otherwise = Lam v (sub e' vs) where
-  sub (App f a) vs = App (sub f vs) (sub a vs)
+-----------LOCKED--------
+ejemplo12 = locked (Lam "s" (Lam "z" ( Var "z" ) ) )
+--Respuesta: True
+ejemplo13 = locked (Lam "x" (App (Lam "x" ( Var "x" ))( Var "z" )))
+--Respuesta: False
 
+--------EVAL-------------
+ejemplo14 = eval (App (Lam "n" (Lam "s" (Lam "z" (App ( Var "s" ) (App (App ( Var "n" ) ( Var "s" ) ) ( Var "z" ) ) ) ) ) ) (Lam "s" (Lam "z" ( Var "z" ) ) ) )
+--Respuesta: \s -> \z -> (s z)
+ejemplo15 = eval (App (Lam "n"(Lam "s"(Lam "z" (App (Var "s")(App (App (Var "n")(Var "s"))(Var "z" ))))))(Lam "s" (Lam "z" (App ( Var "s" )(Var "z" )))))
+--Respuesta: \s -> \z -> (s (s z))
 
-newId :: [Identifier] -> Identifier
-newId vs = head ([ (show i) | i <- [1..]] \\ vs)
+cero = Lam "s" (Lam "z" (Var "z"))
+uno = Lam "s1" (Lam "z1" (App (Var "s1") (Var "z1")))
+suc = Lam "n" (Lam "s2" (Lam "z2" (App (Var "s2") (App (App (Var "n") (Var "s2")) (Var "z2")))))
+ejemplo16 = eval (App suc cero)
+ejemplo17 = eval (App suc uno)
 
-
-alphaExpr :: Expr -> Expr
-alphaExpr (Var x) = Var x
-alphaExpr (Lam x e) = if x `elem` ( e) then (Lam (incrVar x) (alphaExpr e)) else (Lam x e)
-alphaExpr (App e1 e2) = App (alphaExpr e1) (alphaExpr e2) 
--}
