@@ -193,4 +193,3 @@ uno = Lam "s1" (Lam "z1" (App (Var "s1") (Var "z1")))
 suc = Lam "n" (Lam "s2" (Lam "z2" (App (Var "s2") (App (App (Var "n") (Var "s2")) (Var "z2")))))
 ejemplo16 = eval (App suc cero)
 ejemplo17 = eval (App suc uno)
-
