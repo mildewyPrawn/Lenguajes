@@ -99,8 +99,13 @@ locked :: Expr -> Bool
 locked a@(Lam x e) = [x] `intersect` (frVars a `union` lkVars a) /= []
                      && locked e
 locked (App e1 e2) = (lkVars e1) `intersect` (frVars e2 `union` lkVars e2) /= []
-                     && locked e1 && locked e2-}
-locked exp = beta(exp) == exp
+                     && locked e1 && locked e2
+-}
+locked (Var x) = True
+locked (App e1 e2) = locked e1 && locked e2
+locked (App (Lam x e1) e2) = False
+locked (Lam x e) = locked e
+--locked exp = beta(exp) == exp
 
 -- | eval. Evalúa una expresión lambda aplicando beta reducciones hasta quedar
 -- |       bloqueada.
