@@ -56,7 +56,7 @@ w e = error "Not yet implemented."
 newVType :: [VType] -> VType
 --newVType vs = error "Not yet implemented."
 newVType vs = case vs of
-  [] -> error "Empty list."
+  [] -> T 1
   (T x : xs) -> if (T (x + 1)`elem` xs)
                 then newVType xs
                 else T(x + 1)
