@@ -60,5 +60,6 @@ newVType vs = case vs of
   (T x : xs) -> if (T (x + 1)`elem` xs)
                 then newVType xs
                 else T(x + 1)
+  (_:xs) -> newVType xs
 
 
