@@ -25,7 +25,10 @@ instance Show Judgement where
 
 -- |The 'erase' function transforms a MinHs expression to a UMinHs expression.
 erase :: MH.Expr -> UMH.Expr
-erase e = error "Not yet implemented."
+--erase e = error "Not yet implemented."
+erase e = case e of
+  MH.V x -> UMH.V x
+  MH.I n -> UMH.I n
 
 -- |The 'erase' function transforms a UMinHs expression to a MinHs expression.
 --

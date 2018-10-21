@@ -13,7 +13,7 @@ data Expr
   -- | Arithmetic operators
   | Add Expr Expr | Mul Expr Expr | Succ Expr | Pred Expr
   -- | Boolean operators
-  | And Expr Expr | Or Expr Expr | Not Expr 
+  | And Expr Expr | Or Expr Expr | Not Expr
   -- | Relational operators
   | Lt Expr Expr | Gt Expr Expr | Eq Expr Expr
   -- | If expression
