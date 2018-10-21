@@ -32,7 +32,7 @@ data Expr
 instance Show Expr where
   -- |The 'show' function returns a String representation of the MinHs expressions.
   show e = case e of
-    V x -> "V " ++ show x 
+    V x -> "V " ++ show x
     I n -> "I " ++ show n
     B b -> "B " ++ show b
     Add e1 e2 -> "add(" ++ show e1 ++ ", " ++ show e2 ++ ")"

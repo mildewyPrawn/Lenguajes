@@ -54,6 +54,11 @@ w e = error "Not yet implemented."
 
 -- |The 'newVType' function returns a new variable type that is not contained in the given set.
 newVType :: [VType] -> VType
-newVType vs = error "Not yet implemented."
+--newVType vs = error "Not yet implemented."
+newVType vs = case vs of
+  [] -> error "Empty list."
+  (T x : xs) -> if (T (x + 1)`elem` xs)
+                then newVType xs
+                else T(x + 1)
 
 

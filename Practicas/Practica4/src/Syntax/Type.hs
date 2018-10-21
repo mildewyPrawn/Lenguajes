@@ -48,7 +48,7 @@ subst t s
     Boolean -> Boolean
     T x
       -> case s of
-        [] -> T x 
+        [] -> T x
         ((y, t') : ss) -> if x == y then t' else subst t ss
     t1 :-> t2 -> subst t1 s :-> subst t2 s
 
