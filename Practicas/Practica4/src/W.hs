@@ -25,7 +25,6 @@ instance Show Judgement where
 
 -- |The 'erase' function transforms a MinHs expression to a UMinHs expression.
 erase :: MH.Expr -> UMH.Expr
---erase e = error "Not yet implemented."
 erase e = case e of
   MH.V x -> UMH.V x
   MH.I n -> UMH.I n
@@ -69,11 +68,21 @@ erase e = case e of
 -- >>> w $ UMH.Let "x" (UMH.I 2) (UMH.Fun "y" (UMH.Add (UMH.V "x") (UMH.V "y")))
 -- [] |- let(I 2, (x : Integer).f((y : Integer).add(V "x", V y))) : Integer -> Integer
 w :: UMH.Expr -> Judgement
-w e = error "Not yet implemented."
+--w e = error "Not yet implemented."
+w e = case e of
+  UMH.V x -> Assertion([], MH.V x, newVType [])
+  UMH.I n -> Assertion([], MH.I n, Integer)
+  UMH.B b -> Assertion([], MH.B b, Boolean)
+  UMH.Add (UMH.I n1) (UMH.I n2) -> Assertion([],MH.Add (MH.I n1)(MH.I n2), Integer)
+  UMH.Add (UMH.V x) (UMH.V y) -> Assertion([(x, Integer),(y, Integer)], MH.Add (MH.V x) (MH.V y), Integer)
+  UMH.Add (UMH.I n) (UMH.V x) -> Assertion([(x, Integer)],MH.Add(MH.I n)(MH.V x),Integer)
+  UMH.Add (UMH.V x) (UMH.I n) -> Assertion([(x, Integer)],MH.Add(MH.V x)(MH.I n),Integer)
+  -- todo cool, el problema es que pasa si nos pasan Add(Pred n)(Succ n), no se como hacerlo con dos expr
+
+  --UMH.Add e1 e2 -> Assertion([(e1, Integer)], (MH.Add (w e1) (w e2)), newVType [])
 
 -- |The 'newVType' function returns a new variable type that is not contained in the given set.
 newVType :: [VType] -> VType
---newVType vs = error "Not yet implemented."
 newVType vs = case vs of
   [] -> T 1
   (T x : xs) -> if (T (x + 1)`elem` xs)
