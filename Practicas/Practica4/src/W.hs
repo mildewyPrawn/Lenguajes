@@ -29,6 +29,22 @@ erase :: MH.Expr -> UMH.Expr
 erase e = case e of
   MH.V x -> UMH.V x
   MH.I n -> UMH.I n
+  MH.B b -> UMH.B b
+  MH.Add e1 e2 -> UMH.Add (erase e1)(erase e2)
+  MH.Mul e1 e2 -> UMH.Mul (erase e1)(erase e2)
+  MH.Succ e1 -> UMH.Succ (erase e1)
+  MH.Pred e1 -> UMH.Pred (erase e1)
+  MH.And e1 e2 -> UMH.And (erase e1)(erase e2)
+  MH.Or e1 e2 -> UMH.Or (erase e1)(erase e2)
+  MH.Not e1 -> UMH.Not (erase e1)
+  MH.Lt e1 e2 -> UMH.Lt (erase e1)(erase e2)
+  MH.Gt e1 e2 -> UMH.Gt (erase e1)(erase e2)
+  MH.Eq e1 e2 -> UMH.Eq (erase e1)(erase e2)
+  MH.If b e1 e2 -> UMH.If (erase b)(erase e1)(erase e2)
+  MH.Let x _ e1 e2 -> UMH.Let x(erase e1)(erase e2)
+  MH.Fun x _ e1 -> UMH.Fun x (erase e1)
+  MH.FunF n x _ _ e1 -> UMH.FunF n x (erase e1)
+  MH.App e1 e2 -> UMH.App (erase e1)(erase e2)
 
 -- |The 'erase' function transforms a UMinHs expression to a MinHs expression.
 --
