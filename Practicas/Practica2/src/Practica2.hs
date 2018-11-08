@@ -17,7 +17,7 @@ import EjerSem02
 -- |        e -> e'.
 
 eval1 :: Exp -> Exp
---eval1 (V x) = V x --esta no sé si se pone 3:
+eval1 (V _) = error "Ya es una expresion bloqueada."  --esta no sé si se pone 3:
 eval1 (I _) = error "Ya es una expresion bloqueada."
 eval1 (B _) = error "Ya es una expresion bloqueada."
 --No las ponemos porque son estados bloqueados, y tiene que morir si no jala.
@@ -73,6 +73,7 @@ eval1 (If b t f) = if(esBool b)
 eval1 (Let x a b) = if(block a)
                     then subst b (x, a)
                     else  (Let x (eval1 a) b)
+--eval1 _ = error "No se puede evaluar."
 
 -- | evals. Funcion que devuelve la transicion tal que evals e = e' syss
 -- |        e ->* e' y e' esta bloqueado.
