@@ -21,6 +21,7 @@ type Stack = [Frame]
 
 data State = E(Stack, Expr)
            | R(Stack, Expr)
+           | U(Stack, Expr)
 
 type Decl = (Identifier, Type)
 
@@ -196,8 +197,9 @@ eval1 (E (s, Catch e1 e2)) = (E ((CatchL () e2):s, e1))
 eval1 (R ((CatchL () _):s, I n)) = (E (s, I n))
 eval1 (R ((CatchL () _):s, B b)) = (E (s, B b))
 eval1 (R ((CatchL () e2):s, Error)) = (E  (s, e2))
-
 eval1 (R (_:s, _)) = (R (s, Error))
+eval1 (U ((CatchL () e2):s, Error)) = (E  (s, e2))
+eval1 (U (_:s, _)) = (U (s, Error))
 
 --eval1 _ = (E ([], Error))--  <---- tal vez hay que agregar un chingo de casos como:
 --eval1 de cuando if no recibe un numero o eval1 de cuando add no recibe numeros :C
@@ -271,12 +273,16 @@ vt s (Eq e1 e2) t = t == Boolean &&
 vt s (If b e1 e2) t = vt s b Boolean &&
                       vt s e1 t &&
                       vt s e2 t
+--vt [] (If (B False) (B True) (I 5)) Integer
 vt s (Let id e1 e2) t =
   let
-    x = evals e1
+    x = eval e1
   in
     vt s e1 (getType x) &&
     vt (s++[(id, getType e1)]) e2 t
+vt s (Error) Integer = False
+vt s (Error) Boolean = False
+vt s (Catch e1 e2) t = vt s e1 (getType (eval e1))
 
 
 getType :: Expr -> Type
