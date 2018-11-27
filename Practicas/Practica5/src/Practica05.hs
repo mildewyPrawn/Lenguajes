@@ -108,6 +108,7 @@ instance Show State where
   show e = case e of
     E(s, ex) -> (show s) ++ " ≻ " ++ (show ex)
     R(s, ex) -> (show s) ++ " ≺ " ++ (show ex)
+    U(s, ex) -> (show s) ++ " ≺≺ " ++ (show ex)
 
 -- | frVars. Obtiene el conjunto de variables libres de una expresion.
 frVars :: Expr -> [Identifier]
@@ -192,14 +193,17 @@ eval1 (R ((IfF () _ e2):s, (B False))) = (E (s, e2))
 eval1 (E (s, Let x e1 e2)) = (E ((LetF x () e2):s, e1))
 eval1 (R ((LetF x () e2):s, v)) = (E (s, subst e2 (x,v)))
 --nuevo
-eval1 (E (s, Error)) = (R (s, Error))
+eval1 (E (s, Error)) = (U (s, Error))
 eval1 (E (s, Catch e1 e2)) = (E ((CatchL () e2):s, e1))
 eval1 (R ((CatchL () _):s, I n)) = (E (s, I n))
 eval1 (R ((CatchL () _):s, B b)) = (E (s, B b))
-eval1 (R ((CatchL () e2):s, Error)) = (E  (s, e2))
-eval1 (R (_:s, _)) = (R (s, Error))
 eval1 (U ((CatchL () e2):s, Error)) = (E  (s, e2))
-eval1 (U (_:s, _)) = (U (s, Error))
+eval1 (U (_:k, Error)) = (U (k, Error))
+
+eval1 _ = (U ([], Error))
+
+
+--eval1 (U (_:s, _)) = (U (s, Error))
 
 --eval1 _ = (E ([], Error))--  <---- tal vez hay que agregar un chingo de casos como:
 --eval1 de cuando if no recibe un numero o eval1 de cuando add no recibe numeros :C
@@ -216,7 +220,9 @@ evals (R ([], B b)) = (R ([], B b))
 evals (R ([], V v)) = (R ([], V v))
 evals (E ([], Error)) = (E ([], Error))
 
-evals (R ([], Error)) = (R ([], Error)) --nueva, caso en el que tenemos error en el tope
+--evals (R ([], Error)) = (R ([], Error)) --nueva, caso en el que tenemos error en el tope
+
+evals (U ([], Error)) = (U ([], Error)) --nueva, caso en el que tenemos error en el tope
 
 evals otra = evals(eval1 otra)
 
@@ -306,5 +312,6 @@ getType op = case op of
 takeExpr :: State -> Expr
 takeExpr (E (_ ,e)) = e
 takeExpr (R (_ ,e)) = e
+takeExpr (U (_, e)) = e
 
 
