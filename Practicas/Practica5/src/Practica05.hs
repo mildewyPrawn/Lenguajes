@@ -26,7 +26,7 @@ type Decl = (Identifier, Type)
 
 type TypCtxt = [Decl]
 
-data Type = Integer | Boolean
+data Type = Integer | Boolean deriving (Eq)
 
 data Expr = V Identifier | I Int  | B Bool
   | Add Expr Expr | Mul Expr Expr | Succ Expr | Pred Expr
@@ -234,7 +234,68 @@ eval e = let
 
 -- | vt. Función que verifica el tipado de un programa tal que vt Γ e T = True
 -- |     syss Γ ⊢ e:T.
- 
+vt :: TypCtxt -> Expr -> Type -> Bool
+vt [] (V _) _ = False
+vt ((a,b):xs) (V x) t = if x == a
+                        then b == t
+                        else vt xs (V x) t
+vt _ (I _) t = t == Integer
+vt _ (B _) t = t == Boolean
+vt s (Add e1 e2) t = t == Integer &&
+                     vt s e1 t &&
+                     vt s e2 t
+vt s (Mul e1 e2) t = t == Integer &&
+                     vt s e1 t &&
+                     vt s e2 t
+vt s (Succ e) t = t == Integer &&
+                  vt s e t
+vt s (Pred e) t = t == Integer &&
+                  vt s e t
+vt s (And e1 e2) t = t == Boolean &&
+                     vt s e1 t &&
+                     vt s e2 t
+vt s (Or e1 e2) t = t == Boolean &&
+                    vt s e2 t &&
+                    vt s e1 t
+vt s (Not e) t = t == Boolean &&
+                 vt s e t
+vt s (Lt e1 e2) t = t == Boolean &&
+                    vt s e1 Integer &&
+                    vt s e2 Integer
+vt s (Gt e1 e2) t = t == Boolean &&
+                    vt s e1 Integer &&
+                    vt s e2 Integer
+vt s (Eq e1 e2) t = t == Boolean &&
+                    vt s e1 Integer &&
+                    vt s e2 Integer
+vt s (If b e1 e2) t = vt s b Boolean &&
+                      vt s e1 t &&
+                      vt s e2 t
+vt s (Let id e1 e2) t =
+  let
+    x = evals e1
+  in
+    vt s e1 (getType x) &&
+    vt (s++[(id, getType e1)]) e2 t
+
+
+getType :: Expr -> Type
+getType (I _) = Integer
+getType (B _) = Boolean
+getType op = case op of
+  Add _ _ -> Integer
+  Mul _ _ -> Integer
+  Succ  _ -> Integer
+  Pred  _ -> Integer
+  Not   _ -> Boolean
+  And _ _ -> Boolean
+  Or  _ _ -> Boolean
+  Lt  _ _ -> Boolean
+  Gt  _ _ -> Boolean
+  Eq  _ _ -> Boolean
+  If _ a _-> getType a
+  Let _ _ b-> getType b
+
 -- | takeExpr. Función auxiliar que obtiene el lado derecho de una máquina K.
 takeExpr :: State -> Expr
 takeExpr (E (_ ,e)) = e
