@@ -7,7 +7,7 @@
 - Emiliano Galeana Araujo 314032324 galeanaara@ciencias.unam.mx
 -}
 
-module EjerSem04 where
+module Practica05 where
 
 import Data.List
 
@@ -21,6 +21,12 @@ type Stack = [Frame]
 
 data State = E(Stack, Expr)
            | R(Stack, Expr)
+
+type Decl = (Identifier, Type)
+
+type TypCtxt = [Decl]
+
+data Type = Integer | Boolean
 
 data Expr = V Identifier | I Int  | B Bool
   | Add Expr Expr | Mul Expr Expr | Succ Expr | Pred Expr
@@ -190,11 +196,12 @@ eval1 (E (s, Catch e1 e2)) = (E ((CatchL () e2):s, e1))
 eval1 (R ((CatchL () _):s, I n)) = (E (s, I n))
 eval1 (R ((CatchL () _):s, B b)) = (E (s, B b))
 eval1 (R ((CatchL () e2):s, Error)) = (E  (s, e2))
-eval1 (R (_:s, Error)) = (R (s, Error))
---eval1 (E (_:s, Error)) = (R (s,
-eval1 _ = (E ([], Error))--  <---- tal vez hay que agregar un chingo de casos como:
---eval1 de cuando if no recibe un numero o eval1 de cuando add no recibe numeros :C
 
+eval1 (R (_:s, _)) = (R (s, Error))
+
+--eval1 _ = (E ([], Error))--  <---- tal vez hay que agregar un chingo de casos como:
+--eval1 de cuando if no recibe un numero o eval1 de cuando add no recibe numeros :C
+--arriba(1) creo que ya no son necesarios.
 
 -- | evals. Recibe un estado de la máquina K y devuelve un estado derivado de
 -- |        evaluar varias veces hasta obtener la pila vacía.
@@ -206,6 +213,9 @@ evals (R ([], I n)) = (R ([], I n))
 evals (R ([], B b)) = (R ([], B b))
 evals (R ([], V v)) = (R ([], V v))
 evals (E ([], Error)) = (E ([], Error))
+
+evals (R ([], Error)) = (R ([], Error)) --nueva, caso en el que tenemos error en el tope
+
 evals otra = evals(eval1 otra)
 
 -- | eval. Recibe una expresión EAB, la evalúa con la máquina K, y devuelve un
@@ -222,6 +232,9 @@ eval e = let
       then error "No se pudo evaluar."
       else ex-}
 
+-- | vt. Función que verifica el tipado de un programa tal que vt Γ e T = True
+-- |     syss Γ ⊢ e:T.
+ 
 -- | takeExpr. Función auxiliar que obtiene el lado derecho de una máquina K.
 takeExpr :: State -> Expr
 takeExpr (E (_ ,e)) = e
