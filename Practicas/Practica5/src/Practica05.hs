@@ -256,6 +256,7 @@ vt ((a,b):xs) (V x) t = if x == a
                         else vt xs (V x) t
 vt _ (I _) t = t == Integer
 vt _ (B _) t = t == Boolean
+vt _ (Error) _ = True
 vt s (Add e1 e2) t = t == Integer &&
                      vt s e1 t &&
                      vt s e2 t
@@ -286,34 +287,14 @@ vt s (Eq e1 e2) t = t == Boolean &&
 vt s (If b e1 e2) t = vt s b Boolean &&
                       vt s e1 t &&
                       vt s e2 t
---vt [] (If (B False) (B True) (I 5)) Integer
-vt s (Let id e1 e2) t =
-  let
-    x = eval e1
-  in
-    vt s e1 (getType x) &&
-    vt (s++[(id, getType e1)]) e2 t
-vt s (Error) Integer = False
-vt s (Error) Boolean = False
-vt s (Catch e1 e2) t = vt s e1 (getType (eval e1))
+vt s (Let x e1 e2) t = vt s (subst e2 (x, e1)) t
 
+vt s (Catch e1 e2) t = vt s e1 t &&
+                       vt s e2 t
 
-getType :: Expr -> Type
-getType (I _) = Integer
-getType (B _) = Boolean
-getType op = case op of
-  Add _ _ -> Integer
-  Mul _ _ -> Integer
-  Succ  _ -> Integer
-  Pred  _ -> Integer
-  Not   _ -> Boolean
-  And _ _ -> Boolean
-  Or  _ _ -> Boolean
-  Lt  _ _ -> Boolean
-  Gt  _ _ -> Boolean
-  Eq  _ _ -> Boolean
-  If _ a _-> getType a
-  Let _ _ b-> getType b
+--NO ESTOY SEGURO DE QUE SEA && EN VT CATCH PORQUE CREO QUE SE PUEDE ALGO:
+-- catch (I 25) (B True)
+-- PERO IGUAL LO PUEDES PENSAR COMO UN IF...
 
 -- | takeExpr. Función auxiliar que obtiene el lado derecho de una máquina K.
 takeExpr :: State -> Expr
