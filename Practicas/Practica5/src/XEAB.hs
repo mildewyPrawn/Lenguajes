@@ -84,7 +84,6 @@ instance Show Expr where
     (Write a e) -> "Write(" ++ (show a) ++ ", " ++ (show e) ++ ")"
 
 
-
 instance Show Frame where
   show e = case e of
     (AddL _ b) -> "Add( _ " ++ ", " ++ (show b) ++ ")"
@@ -205,6 +204,7 @@ eval1 (R ((IfF () _ e2):s, (B False))) = (E (s, e2))
 eval1 (E (s, Let x e1 e2)) = (E ((LetF x () e2):s, e1))
 eval1 (R ((LetF x () e2):s, v)) = (E (s, subst e2 (x,v)))
 --nuevo
+
 --eval1 (U (_:s, e)) = (U (s, e))
 
 eval1 (E (s, Raise e)) = (E ((RaiseM ()):s, e))
@@ -214,10 +214,6 @@ eval1 (E (s, Handle e1 x e2)) = (E ((HandleM () x e2):s, e1))
 eval1 (R ((HandleM () _ _):s, (I n))) = (R (s, (I n)))
 eval1 (R ((HandleM () _ _):s, (B b))) = (R (s, (B b)))
 eval1 (U ((HandleM () x e2):s, Raise(v))) = (E (s, subst e2 (x,v)))
-
-
-eval1 (U ((_:s), Raise(v))) = (U (s, Raise(v) ) )
-eval1 (E (s, Write _ e)) = (E ((RaiseM ()):s, e))
 
 --eval1 _ = (E ([], Error))--  <---- tal vez hay que agregar un chingo de casos como:
 --eval1 de cuando if no recibe un numero o eval1 de cuando add no recibe numeros :C

@@ -288,7 +288,6 @@ vt s (If b e1 e2) t = vt s b Boolean &&
                       vt s e1 t &&
                       vt s e2 t
 vt s (Let x e1 e2) t = vt s (subst e2 (x, e1)) t
-
 vt s (Catch e1 e2) t = vt s e1 t &&
                        vt s e2 t
 
