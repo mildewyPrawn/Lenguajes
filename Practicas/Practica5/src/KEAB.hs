@@ -69,7 +69,7 @@ instance Show Expr where
     (Lt a b) -> "Lt(" ++ (show a) ++ ", " ++ (show b) ++ ")"
     (Gt a b) -> "Gt(" ++ (show a) ++ ", " ++ (show b) ++ ")"
     (Eq a b) -> "Eq(" ++ (show a) ++ ", " ++ (show b) ++ ")"
-    (If p a b) -> "If(" ++ "," ++ (show p) ++ "," ++ (show a) ++ (show b) ++ ")"
+    (If p a b) -> "If(" ++ (show p) ++ ", " ++ (show a) ++ ", " ++ (show b) ++ ")"
     (Let x a b) -> "Let(" ++ (show x) ++ "," ++ (show a) ++ "." ++ (show b)
     (Continue a b) -> "Continue(" ++ (show a) ++ ", " ++ (show b) ++ ")"
 

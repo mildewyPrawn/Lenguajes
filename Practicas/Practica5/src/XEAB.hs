@@ -77,7 +77,7 @@ instance Show Expr where
     (Lt a b) -> "Lt(" ++ (show a) ++ ", " ++ (show b) ++ ")"
     (Gt a b) -> "Gt(" ++ (show a) ++ ", " ++ (show b) ++ ")"
     (Eq a b) -> "Eq(" ++ (show a) ++ ", " ++ (show b) ++ ")"
-    (If p a b) -> "If(" ++ "," ++ (show p) ++ "," ++ (show a) ++ (show b) ++ ")"
+    (If p a b) -> "If(" ++ (show p) ++ ", " ++ (show a) ++ ", " ++ (show b) ++ ")"
     (Let x a b) -> "Let(" ++ (show x) ++ "," ++ (show a) ++ "." ++ (show b) ++ ")"
     (Raise a) -> "Raise(" ++ (show a) ++ ")"
     (Handle a x b) -> "Handle(" ++ (show a) ++ "," ++ (x) ++ "." ++ (show b) ++ ")"
@@ -216,9 +216,31 @@ eval1 (R ((HandleM () _ _):s, (B b))) = (R (s, (B b)))
 eval1 (U ((HandleM () x e2):s, Raise(v))) = (E (s, subst e2 (x,v)))
 eval1 (U ((_:s), Raise(v))) = (U (s, Raise(v) ) )
 eval1 (E (_, Write m e)) = (E ([],Write m e))
-eval1 (R (_, e)) = E ([], Write "Error" e)
+--eval1 (R (_, e)) = E ([], Write "Error" e) ---mmm lo borre para poner los de abajo
 
 --eval1 _ = (E ([], Error))
+--poder recuperar el estado para mandar el error
+eval1 (R ((SuccF ()):s, (B b))) = E (s, Write "Error" (Succ (B b)))
+eval1 (R ((PredF ()):s, (B b))) = E (s, Write "Error" (Succ (B b)))
+eval1 (R ((NotF ()):s, (I n))) = E (s, Write "Error" (Succ (I n)))
+eval1 (R ((AddL () e2):s, B b)) = E (s, Write "Error" (Add (B b) e2))
+eval1 (R ((AddR (I n) ()):s, B b)) = E (s, Write "Error" (Add (I n) (B b)))
+eval1 (R ((MulL () e2):s, B b)) = E (s, Write "Error" (Mul (B b) e2))
+eval1 (R ((MulR (I n) ()):s, B b)) = E (s, Write "Error" (Mul (I n) (B b)))
+eval1 (R ((AndL () e2):s, I n)) = E (s, Write "Error" (And (I n) e2))
+eval1 (R ((AndR (B b) ()):s, I n)) = E (s, Write "Error" (And (B b) (I n)))
+eval1 (R ((OrL () e2):s, I n)) = E (s, Write "Error" (Or (I n) e2))
+eval1 (R ((OrR (B b) ()):s, I n)) = E (s, Write "Error" (Or (B b) (I n)))
+eval1 (R ((LtL () e2):s, B b)) = E (s, Write "Error" (Lt (B b) e2))
+eval1 (R ((LtR (I n) ()):s, B b)) = E (s, Write "Error" (Lt (I n) (B b)))
+eval1 (R ((GtL () e2):s, B b)) = E (s, Write "Error" (Gt (B b) e2))
+eval1 (R ((GtR (I n) ()):s, B b)) = E (s, Write "Error" (Gt (I n) (B b)))
+eval1 (R ((EqL () e2):s, B b)) = E (s, Write "Error" (Eq (B b) e2))
+eval1 (R ((EqR (I n) ()):s, B b)) = E (s, Write "Error" (Eq (I n) (B b)))
+eval1 (R ((IfF () e1 e2):s, (I n))) = E (s, Write "Error" (If (I n) e1 e2))
+
+
+
 
 -- | evals. Recibe un estado de la máquina K y devuelve un estado derivado de
 -- |        evaluar varias veces hasta obtener la pila vacía.
