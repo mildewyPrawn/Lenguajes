@@ -193,17 +193,24 @@ eval1 (R ((IfF () _ e2):s, (B False))) = (E (s, e2))
 eval1 (E (s, Let x e1 e2)) = (E ((LetF x () e2):s, e1))
 eval1 (R ((LetF x () e2):s, v)) = (E (s, subst e2 (x,v)))
 --nuevo
-eval1 (E (s, Error)) = (U (s, Error))
+eval1 (E (s, Error)) = (U (s, Error))--creo que falta una r...
 eval1 (E (s, Catch e1 e2)) = (E ((CatchL () e2):s, e1))
 eval1 (R ((CatchL () _):s, I n)) = (E (s, I n))
 eval1 (R ((CatchL () _):s, B b)) = (E (s, B b))
 eval1 (U ((CatchL () e2):s, Error)) = (E  (s, e2))
-eval1 (U (_:k, Error)) = (U (k, Error))
-
-eval1 _ = (U ([], Error))
+--eval1 (U (_:k, Error)) = (U (k, Error))
 
 
---eval1 (U (_:s, _)) = (U (s, Error))
+  --eval1 (R (_:s, _)) = (R (s, Error))
+--eval1 (R (s, I n)) = (E (s, I n))--NO
+--eval1 (R (s, B b)) = (E (s, B b))--NO
+--eval1 (R (s, V v)) = (E (s, V v))--NO
+--eval1 _ = (E ([], Error))
+
+
+eval1 (U (_:s, e)) = (U (s, e))
+
+eval1 (R (_:s, _)) = (E (s, Error))
 
 --eval1 _ = (E ([], Error))--  <---- tal vez hay que agregar un chingo de casos como:
 --eval1 de cuando if no recibe un numero o eval1 de cuando add no recibe numeros :C
