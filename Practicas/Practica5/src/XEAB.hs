@@ -7,9 +7,10 @@
 - Emiliano Galeana Araujo 314032324 galeanaara@ciencias.unam.mx
 -}
 
-module Practica05 where
+module XEAB where
 
 import Data.List
+
 
 type Identifier = String
 
@@ -35,8 +36,9 @@ data Expr = V Identifier | I Int  | B Bool
   | Lt Expr Expr  | Gt Expr Expr  | Eq Expr Expr
   | If Expr Expr Expr
   | Let Identifier Expr Expr
-  | Error
-  | Catch Expr Expr deriving (Eq)
+  | Raise Expr
+  | Handle Expr Identifier Expr
+  | Write String Expr deriving (Eq)
 
 data Frame = AddL Pending Expr
            | AddR Expr Pending
@@ -57,8 +59,9 @@ data Frame = AddL Pending Expr
            | EqR Expr Pending
            | IfF Pending Expr Expr
            | LetF Identifier Pending Expr
-           | CatchL Pending Expr --solo evaluamos el primer argumento
-           | CatchR Expr Expr --catch normal ¿?
+           | RaiseM Pending 
+           | HandleM Pending String Expr
+      
 
 instance Show Expr where
   show e = case e of
@@ -76,9 +79,11 @@ instance Show Expr where
     (Gt a b) -> "Gt(" ++ (show a) ++ ", " ++ (show b) ++ ")"
     (Eq a b) -> "Eq(" ++ (show a) ++ ", " ++ (show b) ++ ")"
     (If p a b) -> "If(" ++ "," ++ (show p) ++ "," ++ (show a) ++ (show b) ++ ")"
-    (Let x a b) -> "Let(" ++ (show x) ++ "," ++ (show a) ++ "." ++ (show b)
-    (Error) -> "Error"
-    (Catch a b) -> "Catch(" ++ (show a) ++ (show b) ++ ")"
+    (Let x a b) -> "Let(" ++ (show x) ++ "," ++ (show a) ++ "." ++ (show b) ++ ")"
+    (Raise a) -> "Raise(" ++ (show a) ++ ")"
+    (Handle a x b) -> "Handle(" ++ (show a) ++ "," ++ (x) ++ "." ++ (show b) ++ ")"
+
+
 
 instance Show Frame where
   show e = case e of
@@ -101,8 +106,8 @@ instance Show Frame where
     (EqR a _) -> "Eq(" ++ (show a) ++ ", " ++ " _ )"
     (IfF _ a b) -> "If( _ " ++ (show a) ++ ", " ++ (show b) ++ ")"
     (LetF x _ b) -> "Let(" ++ (show x) ++ ", _, " ++ (show b) ++ ")"
-    (CatchL _ b) -> "Catch( _ " ++ (show b) ++ ")"
-    (CatchR a b) -> "Catch(" ++ (show a) ++ ", " ++ (show b) ++ ")"
+    (RaiseM a ) -> "Raise(" ++ "_" ++ ")"
+    (HandleM a x b) -> "Handle( "  ++ " _ , " ++ (x) ++ "." ++ (show b) ++ ")"
 
 instance Show State where
   show e = case e of
@@ -127,8 +132,9 @@ frVars (Gt a b) = frVars a `union` frVars b
 frVars (Eq a b) = frVars a `union` frVars b
 frVars (If b p q) = frVars b `union` frVars p `union` frVars q
 frVars (Let x p q) = frVars p `union` ([y | y <- frVars q, y /= x])
-frVars (Error) = []
-frVars (Catch a b) = frVars a `union` frVars b --nuevo
+frVars (Raise a) = frVars a 
+frVars (Handle a x b) = frVars a `union` ([y | y <- frVars b, y /= x])
+
 
 -- | subst. Realiza la substitución de una expresión de EAB.
 subst :: Expr -> Substitution -> Expr
@@ -151,8 +157,8 @@ subst (If b p q) s = If(subst b s)(subst p s)(subst q s)
 subst (Let x e1 e2) (y,e) = if(elem x ([y] ++  frVars e))
                             then error "Could not apply the substitution"
                             else Let x (subst e1 (y,e)) (subst e2 (y,e))
-subst (Error) _ = (Error)
-subst (Catch a b) s = Catch(subst a s)(subst b s)
+subst (Raise a) s = Raise(subst a s)
+
 
 -- | eval1. Recibe un estado de la máquina K, y devuelve un paso de la
 -- |        transición.
@@ -193,24 +199,14 @@ eval1 (R ((IfF () _ e2):s, (B False))) = (E (s, e2))
 eval1 (E (s, Let x e1 e2)) = (E ((LetF x () e2):s, e1))
 eval1 (R ((LetF x () e2):s, v)) = (E (s, subst e2 (x,v)))
 --nuevo
-eval1 (E (s, Error)) = (U (s, Error))--creo que falta una r...
-eval1 (E (s, Catch e1 e2)) = (E ((CatchL () e2):s, e1))
-eval1 (R ((CatchL () _):s, I n)) = (E (s, I n))
-eval1 (R ((CatchL () _):s, B b)) = (E (s, B b))
-eval1 (U ((CatchL () e2):s, Error)) = (E  (s, e2))
---eval1 (U (_:k, Error)) = (U (k, Error))
-
-
-  --eval1 (R (_:s, _)) = (R (s, Error))
---eval1 (R (s, I n)) = (E (s, I n))--NO
---eval1 (R (s, B b)) = (E (s, B b))--NO
---eval1 (R (s, V v)) = (E (s, V v))--NO
---eval1 _ = (E ([], Error))
-
-
 eval1 (U (_:s, e)) = (U (s, e))
-
-eval1 (R (_:s, _)) = (E (s, Error))
+eval1 (E (s, Raise e)) = (E ((RaiseM ()):s, e))
+eval1 (R ((RaiseM ()):s, (e))) = (U (s,  Raise (e)))
+eval1 (E (s, Handle e1 x e2)) = (E ((HandleM () x e2):s, e1))
+eval1 (R ((HandleM () x e2):s, v)) = (R (s, v))
+eval1 (U ((HandleM () x e2):s, Raise(v))) = (E (s, subst e2 (x,v)))
+eval1 (U ((f:s), Raise(v))) = (U (s, Raise(v) ) )
+eval1 (E (s, Write(k,e))) = (E ((RaiseM ()):s, e))
 
 --eval1 _ = (E ([], Error))--  <---- tal vez hay que agregar un chingo de casos como:
 --eval1 de cuando if no recibe un numero o eval1 de cuando add no recibe numeros :C
@@ -225,12 +221,6 @@ evals (E ([], V v)) = (R ([], V v))
 evals (R ([], I n)) = (R ([], I n))
 evals (R ([], B b)) = (R ([], B b))
 evals (R ([], V v)) = (R ([], V v))
-evals (E ([], Error)) = (E ([], Error))
-
---evals (R ([], Error)) = (R ([], Error)) --nueva, caso en el que tenemos error en el tope
-
-evals (U ([], Error)) = (U ([], Error)) --nueva, caso en el que tenemos error en el tope
-
 evals otra = evals(eval1 otra)
 
 -- | eval. Recibe una expresión EAB, la evalúa con la máquina K, y devuelve un
@@ -246,54 +236,6 @@ eval e = let
       if ex == Error
       then error "No se pudo evaluar."
       else ex-}
-
--- | vt. Función que verifica el tipado de un programa tal que vt Γ e T = True
--- |     syss Γ ⊢ e:T.
-vt :: TypCtxt -> Expr -> Type -> Bool
-vt [] (V _) _ = False
-vt ((a,b):xs) (V x) t = if x == a
-                        then b == t
-                        else vt xs (V x) t
-vt _ (I _) t = t == Integer
-vt _ (B _) t = t == Boolean
-vt _ (Error) _ = True
-vt s (Add e1 e2) t = t == Integer &&
-                     vt s e1 t &&
-                     vt s e2 t
-vt s (Mul e1 e2) t = t == Integer &&
-                     vt s e1 t &&
-                     vt s e2 t
-vt s (Succ e) t = t == Integer &&
-                  vt s e t
-vt s (Pred e) t = t == Integer &&
-                  vt s e t
-vt s (And e1 e2) t = t == Boolean &&
-                     vt s e1 t &&
-                     vt s e2 t
-vt s (Or e1 e2) t = t == Boolean &&
-                    vt s e2 t &&
-                    vt s e1 t
-vt s (Not e) t = t == Boolean &&
-                 vt s e t
-vt s (Lt e1 e2) t = t == Boolean &&
-                    vt s e1 Integer &&
-                    vt s e2 Integer
-vt s (Gt e1 e2) t = t == Boolean &&
-                    vt s e1 Integer &&
-                    vt s e2 Integer
-vt s (Eq e1 e2) t = t == Boolean &&
-                    vt s e1 Integer &&
-                    vt s e2 Integer
-vt s (If b e1 e2) t = vt s b Boolean &&
-                      vt s e1 t &&
-                      vt s e2 t
-vt s (Let x e1 e2) t = vt s (subst e2 (x, e1)) t
-vt s (Catch e1 e2) t = vt s e1 t &&
-                       vt s e2 t
-
---NO ESTOY SEGURO DE QUE SEA && EN VT CATCH PORQUE CREO QUE SE PUEDE ALGO:
--- catch (I 25) (B True)
--- PERO IGUAL LO PUEDES PENSAR COMO UN IF...
 
 -- | takeExpr. Función auxiliar que obtiene el lado derecho de una máquina K.
 takeExpr :: State -> Expr
