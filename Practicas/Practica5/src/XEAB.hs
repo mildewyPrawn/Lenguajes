@@ -81,7 +81,7 @@ instance Show Expr where
     (Let x a b) -> "Let(" ++ (show x) ++ "," ++ (show a) ++ "." ++ (show b) ++ ")"
     (Raise a) -> "Raise(" ++ (show a) ++ ")"
     (Handle a x b) -> "Handle(" ++ (show a) ++ "," ++ (x) ++ "." ++ (show b) ++ ")"
-    (Write a e) -> "Write(" ++ (show a) ++ ", " ++ (show e) ++ ")"
+    (Write m a) -> (show m)  ++ " " ++ (show a)
 
 
 instance Show Frame where
@@ -214,10 +214,11 @@ eval1 (E (s, Handle e1 x e2)) = (E ((HandleM () x e2):s, e1))
 eval1 (R ((HandleM () _ _):s, (I n))) = (R (s, (I n)))
 eval1 (R ((HandleM () _ _):s, (B b))) = (R (s, (B b)))
 eval1 (U ((HandleM () x e2):s, Raise(v))) = (E (s, subst e2 (x,v)))
+eval1 (U ((_:s), Raise(v))) = (U (s, Raise(v) ) )
+eval1 (E (_, Write m e)) = (E ([],Write m e))
+eval1 (R (_, e)) = E ([], Write "Error" e)
 
---eval1 _ = (E ([], Error))--  <---- tal vez hay que agregar un chingo de casos como:
---eval1 de cuando if no recibe un numero o eval1 de cuando add no recibe numeros :C
---arriba(1) creo que ya no son necesarios.
+--eval1 _ = (E ([], Error))
 
 -- | evals. Recibe un estado de la máquina K y devuelve un estado derivado de
 -- |        evaluar varias veces hasta obtener la pila vacía.
@@ -228,6 +229,7 @@ evals (E ([], V v)) = (R ([], V v))
 evals (R ([], I n)) = (R ([], I n))
 evals (R ([], B b)) = (R ([], B b))
 evals (R ([], V v)) = (R ([], V v))
+evals (E ([], Write m e)) = (R ([], Write m e))
 evals otra = evals(eval1 otra)
 
 -- | eval. Recibe una expresión EAB, la evalúa con la máquina K, y devuelve un
@@ -235,6 +237,7 @@ evals otra = evals(eval1 otra)
 eval :: Expr -> Expr
 eval e = let
   x = evals(E ([], e))
+  --x = evals(E ([], Write "Error" e))
   in
     let ex = takeExpr x
     in
