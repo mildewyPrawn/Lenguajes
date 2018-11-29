@@ -7,7 +7,7 @@
 - Emiliano Galeana Araujo 314032324 galeanaara@ciencias.unam.mx
 -}
 
-module EjerSem04 where
+module KEAB where
 
 import Data.List
 
@@ -190,11 +190,12 @@ eval1 (E (s, Let x e1 e2)) = (E ((LetF x () e2):s, e1))
 eval1 (R ((LetF x () e2):s, v)) = (E (s, subst e2 (x,v)))
 --eval1 _ = (E ([], Error))
 --nuevos.
+eval1 (E (s, Cont r)) = (R (s, Cont r))
 eval1 (E (s, LetCC x e)) = (E (s, subst e (x, Cont(s))))
 eval1 (E (s, Continue e1 e2)) = (E ((ContinueL () e2):s, e1))
 eval1 (R ((ContinueL () e2):s, ( n))) = (E ((ContinueR ( n) ()):s, e2))
 --eval1 (R ((ContinueL () e2):s, (B b))) = (E ((ContinueR (B b) ()):s, e2))
-eval1 (R ((ContinueR (Cont s') ()):_, ( n))) = (R (s', ( n)))
+eval1 (R ((ContinueR (Cont s') ()):s, ( n))) = (R (s', ( n)))
 --eval1 (R ((ContinueR (Cont s') ()):_, (B b))) = (R (s', (B b)))
 
 
