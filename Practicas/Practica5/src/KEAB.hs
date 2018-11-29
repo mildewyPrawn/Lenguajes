@@ -1,10 +1,11 @@
 {-
 - Lenguajes de Programación 2019-1
-- Máquina K
+- Expresiones KEAB
 - Profesor: Dr. Favio Ezequiel Miranda Perea
 - Ayudante: Diego Carrillo Verduzco
 - Laboratorio: Pablo G. González López
 - Emiliano Galeana Araujo 314032324 galeanaara@ciencias.unam.mx
+- Kevin Ricardo Miranda Sanchez 314011163 kevinmiranda29@ciencias.unam.mx
 -}
 
 module KEAB where
