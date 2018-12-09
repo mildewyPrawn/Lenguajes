@@ -1,0 +1,128 @@
+% Lenguajes de Programación 2019-1
+% Plantilla para reportes de laboratorio.
+
+\documentclass[spanish,12pt,letterpaper]{article}
+
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{authblk}
+\usepackage{listings}
+\usepackage{dsfont}
+\lstnewenvironment{code}
+{\lstset{}%
+  \csname lst@SetFirstLabel\endcsname}
+{\csname lst@SaveFirstLabel\endcsname}
+\lstset{
+  basicstyle=\small\ttfamily,
+  flexiblecolumns=false,
+  basewidth={0.5em,0.45em},
+  literate={+}{{$+$}}1 {/}{{$/$}}1 {*}{{$*$}}1 {=}{{$=$}}1
+  {>}{{$>$}}1 {<}{{$<$}}1 {\\}{{$\lambda$}}1
+  {\\\\}{{\char`\\\char`\\}}1
+  {->}{{$\rightarrow$}}2 {>=}{{$\geq$}}2 {<-}{{$\leftarrow$}}2
+  {<=}{{$\leq$}}2 {=>}{{$\Rightarrow$}}2 
+  {\ .}{{$\circ$}}2 {\ .\ }{{$\circ$}}2
+  {>>}{{>>}}2 {>>=}{{>>=}}2
+  {|}{{$\mid$}}1               
+}
+
+\title{Practica Extra 2}
+\author{Emiliano Galeana Araujo}
+\affil{Facultad de Ciencias, UNAM}
+\date{Fecha de entrega: 9 de Diciembre de 2018}
+
+\begin{document}
+
+\maketitle
+
+\section{Descripción del programa}
+Hemos estudiado la semántica operacional de paso pequeño, la cual consiste en
+evaluar expresiones un paso a la vez. Como alternativa a esta, existe otro
+estilo de evaluar las expresiones que consiste en definir de forma completa cómo
+se evalúa una expresión hasta llegar a un valor, llamamos a esto semántica
+operacional de paso grande.
+
+\begin{code}
+  data Expr = V Identifier | I Int | B Bool
+          | Add Expr Expr | Mul Expr Expr | Succ Expr | Pred Expr
+          | Not Expr | And Expr Expr | Or Expr Expr
+          | Lt Expr Expr | Gt Expr Expr | Eq Expr Expr
+          | If Expr Expr Expr
+          | Let Identifier Expr Expr
+          | Pair Expr Expr
+          | Fst Expr | Snd Expr
+          | Lam Identifier Expr
+          | App Expr Expr
+          | Rec Identifier Expr deriving (Eq)
+\end{code}
+
+Las siguientes son funciones recursivas para el tipo de dato \texttt{Expr}.
+
+\begin{code}
+   -- | frVars. Obtiene el conjunto de variables libres de una expresion.
+   frVars :: Expr -> [Identifier]
+
+   -- | subst. Aplica una sustitucion.
+   subst :: Expr -> Substitution -> Expr
+
+   -- | evals. Devuelve la evaluacion de una expresion implementando las reglas
+   -- |        anteriores(PDF).
+   evals :: Expr -> Expr
+
+   -- | vt. Funcion que verifica el tipado de un programa.
+   vt :: TypCtx -> Expr -> Type -> Bool
+
+   -- | eval. Funcion que devuelve la evaluacion de una expresion solo si esta
+   -- |       bien tipada.
+   eval :: Expr -> Expr
+
+\end{code}
+
+\section{Entrada y ejecución}
+
+El programa es interpretado por \texttt{GCHI} de la siguiente forma
+\begin{lstlisting}[]
+  ~:ghci Extra02.hs
+\end{lstlisting}
+
+Ya en el programa, los siguientes son ejemplos de ejecución de paso grande \texttt{Snoc}.
+\begin{lstlisting}[language=Haskell]
+  *Extra02> frVars (Snd (Pair (V ``x''') (V ``y''')))
+   [``x''', ``y''']
+  *Extra02> frVars (Let ``x''' (Add (V ``x''') (I 10)) 
+                               (Mul (I 0) (Add (V ``x''') (V ``y'''))))
+   [``x''', ``y''']
+  *Extra02> subst (Fst (Pair (V ``x''') (V ``x'''))) (``x''', I 1)
+  Pair (I 1) (I 1)
+  *Extra02> subst (Lam ``x''' (Or (V ``x''') (V ``z'''))) 
+                                           (``z''', (And (B True)(V ``x''')))
+   *** Exception: Could not apply the substitution.
+  *Extra02> evals (Pair (I 0) (B False))
+   Pair (I 0) (B False)
+  *Extra02> evals (Add (I 10) (Mul (Pred (I 2)) (Succ (I 0))))
+   I 11
+  *Extra02> vt [(``x''', Integer)] (Lam ``x''' (Eq (I 0) (V ``x''')))
+                                   (Func Integer Boolean)
+   True
+  *Extra02> vt [] (If (Eq (I 0) (I 0)) (B False) (I 10)) Integer
+   False
+  *Extra02> eval (Let ``c''' (Eq (I 10) (I 2)) (If (V ``c''') (And (B True) (V``c''')) 
+                                                    (Or (B False)(V``c'''))))
+   B False
+\end{lstlisting}
+
+
+\section{Conclusiones}
+
+Creo que implementar la semántica operacional de paso grande es más sencillo, al
+menos por la parte donde no es necesario escribir todos los pasitos. Pero creo
+que para mostrar errores sería mejor con la otra, ya que aquí los podemos
+mostrar, pero no como lo implementamos en la otra.
+
+\begin{thebibliography}{9}
+
+\bibitem{lamport94}
+  Archivero, curso de Lenguajes de Programación 2019-1
+\end{thebibliography}
+
+\end{document}
