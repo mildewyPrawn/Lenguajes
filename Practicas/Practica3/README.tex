@@ -34,7 +34,7 @@
 \maketitle
 
 \section{Descripción del programa}
-Expresiones del Calculo Lambda, el cálculo lambda consiste siplemente en tres
+Expresiones del Calculi Lambda, el cálculo lambda consiste siplemente en tres
 términos y todas las combinaciones recursivas válidas de estos términos. Las
 definimos como sigue.
 \begin{lstlisting}[language=Haskell]
@@ -143,7 +143,7 @@ ejemplo15 = eval (App (Lam "n"(Lam "s"(Lam "z" (App (Var "s")(App (App (Var "n")
 
 cero = Lam "s" (Lam "z" (Var "z"))
 uno = Lam "s1" (Lam "z1" (App (Var "s1") (Var "z1")))
-suc = Lam "n" (Lam "s2" (Lam "z2" (App (Var "s2") (App (App (Var "n") (Var
+suc = Lam "n" (Lam "s2" (Lam "z2" (App (Var "s2"}) (App (App (Var "n") (Var
 "s2"))  (Var "z2")))))
 
 ejemplo16 = eval (App suc cero)

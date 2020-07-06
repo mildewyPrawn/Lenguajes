@@ -86,11 +86,8 @@ shift (d, c, (AB r s)) = AB(shift(d, c, r))(shift(d,c,s))
 -- | subst. Aplica la substitución a la expresión anónima.
 subst :: ExprB -> Substitution -> ExprB
 subst (IB n) (j, s) = if n == j then s else (IB n)
---subst (LB t) (j, s) = subst (LB t) (j + 1, shift(1, 0, s))
 subst (LB t) (j, s) = LB(subst t (j + 1, shift(1, 0, s)))
 subst (AB t r) (j, s) = AB(subst t (j, s))(subst r (j, s))
-
---subst (LB (AB ( IB 0 ) (AB ( IB 2 ) ( IB 1 ) ) ) ) ( 1 , LB (AB ( IB 0 )( IB 2 ) ) )
 
 -- | eval1. Aplica un paso de la reducción de una expresión anónima.
 eval1 :: ExprB -> ExprB
@@ -98,8 +95,6 @@ eval1 (AB (LB t)s) = shift(-1, 0, subst t (0, shift (1, 0, s)))
 eval1 (LB t) = LB (eval1 t)
 eval1 (AB t1 t2) = AB (t1) (eval1 t2)
 eval1 (IB n) = (IB n)
-
---eval1 (AB (LB (AB (LB ( IB 1 ) ) ( IB 0 ) ) ) (LB (AB ( IB 2 ) (AB ( IB 1 )( IB 0 ) ) ) ) )
 
 -- | locked. Determina si una expresión anónima está bloqueada es decir, no se
 -- |         pueden hacer más reducciones.

@@ -21,13 +21,13 @@ type Pending = ()
 
 type Stack = [Frame]
 
-data State = E(Stack, Expr)
-           | R(Stack, Expr)
-           | U(Stack, Expr)
-
 type Decl = (Identifier, Type)
 
 type TypCtxt = [Decl]
+
+data State = E(Stack, Expr)
+           | R(Stack, Expr)
+           | U(Stack, Expr)
 
 data Type = Integer | Boolean deriving (Eq)
 
@@ -239,9 +239,6 @@ eval1 (R ((GtR (I n) ()):s, a)) = E (s, Write "Error" (Gt (I n) (a)))
 eval1 (R ((EqL () e2):s, a)) = E (s, Write "Error" (Eq (a) e2))
 eval1 (R ((EqR (I n) ()):s, a)) = E (s, Write "Error" (Eq (I n) (a)))
 eval1 (R ((IfF () e1 e2):s, (a))) = E (s, Write "Error" (If (a) e1 e2))
-
-
-
 
 -- | evals. Recibe un estado de la máquina K y devuelve un estado derivado de
 -- |        evaluar varias veces hasta obtener la pila vacía.

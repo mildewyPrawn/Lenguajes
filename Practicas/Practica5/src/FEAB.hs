@@ -20,13 +20,13 @@ type Pending = ()
 
 type Stack = [Frame]
 
-data State = E(Stack, Expr)
-           | R(Stack, Expr)
-           | U(Stack, Expr)
-
 type Decl = (Identifier, Type)
 
 type TypCtxt = [Decl]
+
+data State = E(Stack, Expr)
+           | R(Stack, Expr)
+           | U(Stack, Expr)
 
 data Type = Integer | Boolean deriving (Eq)
 
@@ -58,8 +58,8 @@ data Frame = AddL Pending Expr
            | EqR Expr Pending
            | IfF Pending Expr Expr
            | LetF Identifier Pending Expr
-           | CatchL Pending Expr --solo evaluamos el primer argumento
-           | CatchR Expr Expr --catch normal ¿?
+           | CatchL Pending Expr
+           | CatchR Expr Expr
 
 instance Show Expr where
   show e = case e of
